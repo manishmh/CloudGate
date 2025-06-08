@@ -2,6 +2,7 @@
 
 **Secure Single Sign-On for SaaS Applications**
 
+[![CI/CD](https://github.com/manishmh/CloudGate/actions/workflows/ci.yml/badge.svg)](https://github.com/manishmh/CloudGate/actions/workflows/ci.yml)
 [![Go](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)](https://golang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-000000?style=flat&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=flat&logo=typescript)](https://www.typescriptlang.org/)
@@ -95,7 +96,7 @@ CloudGate is a comprehensive Single Sign-On (SSO) solution that enables secure a
 ### **1. Clone & Setup**
 ```bash
 # Clone repository
-git clone https://github.com/your-username/CloudGate.git
+git clone https://github.com/manishmh/CloudGate.git
 cd CloudGate
 
 # Start Keycloak

@@ -347,16 +347,15 @@ deployment-secrets/
 # ================================
 # PACKAGE MANAGERS
 # ================================
-# npm
-package-lock.json
+# npm (keep package-lock.json for reproducible builds)
 npm-shrinkwrap.json
 
-# Yarn
+# Yarn (only ignore if using npm)
 yarn.lock
 .yarn/
 .pnp.*
 
-# pnpm
+# pnpm (only ignore if using npm)
 pnpm-lock.yaml
 
 # Go modules (keep go.mod and go.sum)
