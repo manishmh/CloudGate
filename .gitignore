@@ -1,0 +1,421 @@
+# CloudGate - Comprehensive .gitignore
+
+# ================================
+# ENVIRONMENT & SECRETS
+# ================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+backend/.env
+frontend/.env*
+
+# ================================
+# BACKEND (Go)
+# ================================
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+cloudgate-backend
+backend/cloudgate-backend
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Air live reload
+tmp/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+cloudgate.db
+
+# Logs
+*.log
+logs/
+backend/logs/
+
+# ================================
+# FRONTEND (Next.js/React)
+# ================================
+# Dependencies
+node_modules/
+frontend/node_modules/
+/.pnp
+.pnp.js
+
+# Production builds
+.next/
+frontend/.next/
+out/
+frontend/out/
+build/
+frontend/build/
+dist/
+frontend/dist/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+frontend/coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# ================================
+# DOCKER & CONTAINERS
+# ================================
+# Docker volumes
+docker-data/
+postgres-data/
+keycloak-data/
+
+# Docker override files
+docker-compose.override.yml
+docker-compose.local.yml
+
+# ================================
+# DATABASE & STORAGE
+# ================================
+# PostgreSQL
+*.sql.backup
+*.dump
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+
+# Database dumps
+*.sql
+
+# ================================
+# IDE & EDITORS
+# ================================
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ================================
+# OPERATING SYSTEM
+# ================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ================================
+# CERTIFICATES & KEYS
+# ================================
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# ================================
+# LOGS & MONITORING
+# ================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ================================
+# TESTING & COVERAGE
+# ================================
+coverage/
+*.lcov
+.nyc_output/
+test-results/
+playwright-report/
+test-results.xml
+
+# ================================
+# BACKUP & TEMPORARY FILES
+# ================================
+*.backup
+*.bak
+*.tmp
+*.temp
+*~
+.#*
+\#*#
+
+# ================================
+# CLOUDGATE SPECIFIC
+# ================================
+# OAuth credentials (if accidentally created as files)
+oauth-credentials/
+credentials/
+
+# Generated documentation
+docs/generated/
+
+# Local configuration overrides
+config.local.*
+settings.local.*
+
+# Development scripts
+dev-scripts/
+local-scripts/
+
+# Test data
+test-data/
+mock-data/
+
+# Performance profiling
+*.prof
+*.pprof
+
+# ================================
+# DEPLOYMENT & CI/CD
+# ================================
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Kubernetes
+*.kubeconfig
+
+# Helm
+charts/*.tgz
+
+# CI/CD artifacts
+.github/workflows/secrets/
+deployment-secrets/
+
+# ================================
+# PACKAGE MANAGERS
+# ================================
+# npm
+package-lock.json
+npm-shrinkwrap.json
+
+# Yarn
+yarn.lock
+.yarn/
+.pnp.*
+
+# pnpm
+pnpm-lock.yaml
+
+# Go modules (keep go.mod and go.sum)
+# go.mod and go.sum should be committed
+
+# ================================
+# MISC
+# ================================
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# Archives
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# ================================
+# CLOUDGATE DEVELOPMENT
+# ================================
+# Local development overrides
+.env.override
+config.override.*
+
+# Generated API documentation
+api-docs/generated/
+
+# Local database backups
+*.sql.backup
+db-backups/
+
+# Local SSL certificates for development
+ssl/
+certs/local/
+
+# Performance and profiling
+*.cpuprofile
+*.heapprofile
+*.trace
+
+# Local development utilities
+dev-utils/
+local-tools/
+
+PROGRESS_REPORT.md
+notes
