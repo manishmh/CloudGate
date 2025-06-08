@@ -18,14 +18,14 @@ import {
 } from "@/lib/api";
 import { useKeycloak } from "@react-keycloak/web";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IoRefresh } from "react-icons/io5";
-import Link from 'next/link';
 
 interface AppConnection {
   name: string;
-  status: 'connected' | 'disconnected';
+  status: "connected" | "disconnected";
   icon: string;
   description: string;
   connectUrl: string;
@@ -42,35 +42,34 @@ export default function Dashboard() {
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [connections, setConnections] = useState<AppConnection[]>([
     {
-      name: 'Google Workspace',
-      status: 'disconnected',
-      icon: '🔍',
-      description: 'Access Gmail, Drive, Calendar, and more',
-      connectUrl: '/oauth/google/connect'
+      name: "Google Workspace",
+      status: "disconnected",
+      icon: "🔍",
+      description: "Access Gmail, Drive, Calendar, and more",
+      connectUrl: "/oauth/google/connect",
     },
     {
-      name: 'Microsoft 365',
-      status: 'disconnected',
-      icon: '🏢',
-      description: 'Access Outlook, OneDrive, Teams, and more',
-      connectUrl: '/oauth/microsoft/connect'
+      name: "Microsoft 365",
+      status: "disconnected",
+      icon: "🏢",
+      description: "Access Outlook, OneDrive, Teams, and more",
+      connectUrl: "/oauth/microsoft/connect",
     },
     {
-      name: 'Slack',
-      status: 'disconnected',
-      icon: '💬',
-      description: 'Access your Slack workspaces',
-      connectUrl: '/oauth/slack/connect'
+      name: "Slack",
+      status: "disconnected",
+      icon: "💬",
+      description: "Access your Slack workspaces",
+      connectUrl: "/oauth/slack/connect",
     },
     {
-      name: 'GitHub',
-      status: 'disconnected',
-      icon: '🐙',
-      description: 'Access your repositories and organizations',
-      connectUrl: '/oauth/github/connect'
-    }
+      name: "GitHub",
+      status: "disconnected",
+      icon: "🐙",
+      description: "Access your repositories and organizations",
+      connectUrl: "/oauth/github/connect",
+    },
   ]);
-  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     loadApps();
@@ -86,30 +85,26 @@ export default function Dashboard() {
 
     // Check for connection success from URL params
     const urlParams = new URLSearchParams(window.location.search);
-    const connected = urlParams.get('connected');
-    const email = urlParams.get('email');
-    
+    const connected = urlParams.get("connected");
+    const email = urlParams.get("email");
+
     if (connected && email) {
       // Update the connection status
-      setConnections(prev => prev.map(conn => 
-        conn.name.toLowerCase().includes(connected) 
-          ? { ...conn, status: 'connected' as const }
-          : conn
-      ));
-      
+      setConnections((prev) =>
+        prev.map((conn) =>
+          conn.name.toLowerCase().includes(connected)
+            ? { ...conn, status: "connected" as const }
+            : conn
+        )
+      );
+
       // Show success message
       alert(`Successfully connected to ${connected}! Email: ${email}`);
-      
+
       // Clean up URL
-      window.history.replaceState({}, document.title, '/dashboard');
+      window.history.replaceState({}, document.title, "/dashboard");
     }
 
-    // Load user info (mock for now)
-    setUser({
-      name: 'Test User',
-      email: 'test@cloudgate.com',
-      keycloakId: 'test-user-id'
-    });
     setLoading(false);
   }, [keycloak]);
 
@@ -292,11 +287,13 @@ export default function Dashboard() {
 
   const handleDisconnect = async (app: AppConnection) => {
     // TODO: Implement disconnect functionality
-    setConnections(prev => prev.map(conn => 
-      conn.name === app.name 
-        ? { ...conn, status: 'disconnected' as const }
-        : conn
-    ));
+    setConnections((prev) =>
+      prev.map((conn) =>
+        conn.name === app.name
+          ? { ...conn, status: "disconnected" as const }
+          : conn
+      )
+    );
   };
 
   if (!initialized) {
@@ -495,7 +492,8 @@ export default function Dashboard() {
               SaaS Application Connections
             </h3>
             <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Connect to your favorite SaaS applications for seamless single sign-on.
+              Connect to your favorite SaaS applications for seamless single
+              sign-on.
             </p>
           </div>
           <ul className="divide-y divide-gray-200">
@@ -505,19 +503,25 @@ export default function Dashboard() {
                   <div className="flex items-center">
                     <div className="text-2xl mr-4">{app.icon}</div>
                     <div>
-                      <h4 className="text-lg font-medium text-gray-900">{app.name}</h4>
+                      <h4 className="text-lg font-medium text-gray-900">
+                        {app.name}
+                      </h4>
                       <p className="text-sm text-gray-500">{app.description}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      app.status === 'connected' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {app.status === 'connected' ? '✓ Connected' : '○ Not Connected'}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        app.status === "connected"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {app.status === "connected"
+                        ? "✓ Connected"
+                        : "○ Not Connected"}
                     </span>
-                    {app.status === 'connected' ? (
+                    {app.status === "connected" ? (
                       <button
                         onClick={() => handleDisconnect(app)}
                         className="bg-red-600 text-white px-4 py-2 rounded-md text-sm hover:bg-red-700 transition-colors"
@@ -557,7 +561,7 @@ export default function Dashboard() {
                 <p className="text-sm text-gray-500">Manage your account</p>
               </div>
             </Link>
-            
+
             <Link
               href="/privacy-policy"
               className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
@@ -568,7 +572,7 @@ export default function Dashboard() {
                 <p className="text-sm text-gray-500">View our privacy policy</p>
               </div>
             </Link>
-            
+
             <Link
               href="/terms"
               className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
@@ -579,9 +583,12 @@ export default function Dashboard() {
                 <p className="text-sm text-gray-500">View our terms</p>
               </div>
             </Link>
-            
+
             <button
-              onClick={() => window.location.href = 'http://localhost:8080/realms/cloudgate/account/'}
+              onClick={() =>
+                (window.location.href =
+                  "http://localhost:8080/realms/cloudgate/account/")
+              }
               className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
             >
               <div className="text-2xl mr-3">🔑</div>
