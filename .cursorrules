@@ -1,0 +1,212 @@
+# CloudGate Project - Cursor AI Development Rules
+
+## 🚨 CRITICAL WORKFLOW REQUIREMENTS
+
+### Pre-Push Checklist (MANDATORY)
+Before ANY git push or commit, ALWAYS run these commands in order:
+
+1. **Frontend Checks:**
+   ```bash
+   cd frontend
+   npm run typecheck    # TypeScript type checking
+   npm run lint         # ESLint checking
+   npm run build        # Production build test
+   ```
+
+2. **Backend Checks:**
+   ```bash
+   cd backend
+   go mod verify        # Verify dependencies
+   go vet ./...         # Go static analysis
+   go fmt ./...         # Go formatting
+   go build ./...       # Build check
+   ```
+
+3. **Security Checks:**
+   - Never commit service account keys, API keys, or secrets
+   - Always check .gitignore patterns for sensitive files
+   - Verify no hardcoded credentials in code
+
+### Code Quality Standards
+
+#### TypeScript/React (Frontend)
+- Always use TypeScript strict mode
+- Remove unused imports and variables
+- Use proper type definitions, avoid `any`
+- Follow React hooks best practices
+- Use proper error boundaries and loading states
+
+#### Go (Backend)
+- Follow Go conventions and idioms
+- Use proper error handling (no panic in production code)
+- Add proper logging with structured logging
+- Use context for cancellation and timeouts
+- Follow dependency injection patterns
+
+#### General
+- Write descriptive commit messages
+- Use semantic versioning for releases
+- Document complex business logic
+- Add proper error handling everywhere
+- Use environment variables for configuration
+
+## 🏗️ Project Structure Rules
+
+### Frontend (Next.js)
+- Use App Router (not Pages Router)
+- Keep components in `src/components/`
+- Use proper TypeScript interfaces in `src/types/`
+- Environment variables must start with `NEXT_PUBLIC_` for client-side
+- Use proper loading and error states for all async operations
+
+### Backend (Go)
+- Follow clean architecture principles
+- Keep handlers thin, business logic in services
+- Use proper middleware for cross-cutting concerns
+- Database operations should be in repositories
+- Use proper validation for all inputs
+
+## 🔒 Security Requirements
+
+### Authentication & Authorization
+- Always validate JWT tokens
+- Use proper CORS configuration
+- Implement rate limiting
+- Validate all user inputs
+- Use HTTPS in production
+
+### Data Protection
+- Never log sensitive data
+- Use proper encryption for sensitive data
+- Implement proper session management
+- Follow OWASP security guidelines
+
+## 🚀 Deployment Rules
+
+### Docker
+- Use multi-stage builds for optimization
+- Don't include development dependencies in production
+- Use proper health checks
+- Set appropriate resource limits
+
+### CI/CD
+- All tests must pass before deployment
+- Use proper environment separation
+- Implement proper rollback strategies
+- Monitor deployment health
+
+## 📝 Documentation Requirements
+
+### Code Documentation
+- Document all public APIs
+- Add JSDoc for complex functions
+- Document environment variables
+- Keep README files updated
+
+### API Documentation
+- Use OpenAPI/Swagger for REST APIs
+- Document all endpoints with examples
+- Include error response formats
+- Document authentication requirements
+
+## 🧪 Testing Requirements
+
+### Frontend Testing
+- Unit tests for utility functions
+- Component testing for complex components
+- Integration tests for API calls
+- E2E tests for critical user flows
+
+### Backend Testing
+- Unit tests for business logic
+- Integration tests for database operations
+- API endpoint testing
+- Performance testing for critical paths
+
+## 🔧 Development Environment
+
+### Required Tools
+- Node.js 18+ for frontend
+- Go 1.21+ for backend
+- Docker for containerization
+- Git for version control
+
+### IDE Configuration
+- Use proper linting configuration
+- Set up auto-formatting on save
+- Configure proper debugging setup
+- Use proper extensions for language support
+
+## 🚨 Error Handling Rules
+
+### Frontend
+- Use proper error boundaries
+- Show user-friendly error messages
+- Log errors for debugging
+- Implement retry mechanisms where appropriate
+
+### Backend
+- Return proper HTTP status codes
+- Use structured error responses
+- Log errors with context
+- Implement circuit breakers for external services
+
+## 📊 Performance Requirements
+
+### Frontend
+- Optimize bundle size
+- Use proper caching strategies
+- Implement lazy loading
+- Monitor Core Web Vitals
+
+### Backend
+- Implement proper database indexing
+- Use connection pooling
+- Implement caching where appropriate
+- Monitor response times
+
+## 🔄 Git Workflow
+
+### Branch Strategy
+- Use feature branches for new features
+- Use conventional commit messages
+- Squash commits before merging
+- Use pull requests for code review
+
+### Commit Message Format
+```
+type(scope): description
+
+[optional body]
+
+[optional footer]
+```
+
+Types: feat, fix, docs, style, refactor, test, chore
+
+## 🎯 CloudGate Specific Rules
+
+### Authentication Flow
+- Always check authentication state before protected routes
+- Implement proper logout functionality
+- Handle token refresh properly
+- Use secure cookie settings
+
+### Keycloak Integration
+- Use proper Keycloak adapter configuration
+- Handle Keycloak events properly
+- Implement proper error handling for auth failures
+- Use proper redirect URLs
+
+### API Integration
+- Use proper error handling for API calls
+- Implement proper loading states
+- Use proper timeout configurations
+- Handle network failures gracefully
+
+---
+
+## ⚠️ REMEMBER: ALWAYS RUN TYPECHECK, LINT, AND BUILD BEFORE PUSHING!
+
+This is non-negotiable. Failed CI/CD builds waste time and resources.
+Quality code is shipped code. 

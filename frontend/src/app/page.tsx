@@ -2,15 +2,8 @@
 
 import { CheckCircle, Globe, Lock, Shield, Users, Zap } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function HomePage() {
-  const router = useRouter();
-
-  const handleGetStarted = () => {
-    router.push("/login");
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Navigation */}
