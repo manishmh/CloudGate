@@ -174,12 +174,18 @@ jobs:
     - name: Configure Docker to use gcloud as a credential helper
       run: gcloud auth configure-docker
 
-    - name: Deploy Frontend to Cloud Run
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push frontend image
       working-directory: ./frontend
       run: |
-        # Build and deploy frontend
-        gcloud builds submit --tag gcr.io/${{ env.PROJECT_ID }}/cloudgate-frontend
-        
+        # Build and push frontend image
+        docker build -t gcr.io/${{ env.PROJECT_ID }}/cloudgate-frontend .
+        docker push gcr.io/${{ env.PROJECT_ID }}/cloudgate-frontend
+
+    - name: Deploy Frontend to Cloud Run
+      run: |
         gcloud run deploy cloudgate-frontend \
           --image gcr.io/${{ env.PROJECT_ID }}/cloudgate-frontend \
           --platform managed \
