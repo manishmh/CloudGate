@@ -16,6 +16,7 @@
     "@types/keycloak-js": "^2.5.4",
     "@types/nodemailer": "^6.4.17",
     "keycloak-js": "^26.2.0",
+    "lucide-react": "^0.513.0",
     "next": "15.3.3",
     "nodemailer": "^7.0.3",
     "react": "^19.0.0",
