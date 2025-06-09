@@ -262,6 +262,14 @@ $RECYCLE.BIN/
 *.jks
 *.keystore
 
+# Google Cloud service account keys
+*-service-account.json
+*-sa.json
+service-account-*.json
+gcp-*.json
+*-gcp-*.json
+routemate-*.json
+
 # ================================
 # LOGS & MONITORING
 # ================================
