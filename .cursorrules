@@ -5,13 +5,12 @@
 ### Pre-Push Checklist (MANDATORY)
 Before ANY git push or commit, ALWAYS run these commands in order:
 
-1. **Frontend Checks:**
+1. **Frontend Checks (RUN ALL IN ONE COMMAND):**
    ```bash
    cd frontend
-   npm run typecheck    # TypeScript type checking
-   npm run lint         # ESLint checking
-   npm run build        # Production build test
+   npm run typecheck && npm run lint && npm run build
    ```
+   **NEVER run these separately - always run all three together in one command!**
 
 2. **Backend Checks:**
    ```bash
@@ -35,6 +34,7 @@ Before ANY git push or commit, ALWAYS run these commands in order:
 - Use proper type definitions, avoid `any`
 - Follow React hooks best practices
 - Use proper error boundaries and loading states
+- **ALWAYS run typecheck && lint && build together in one command**
 
 #### Go (Backend)
 - Follow Go conventions and idioms
@@ -206,7 +206,12 @@ Types: feat, fix, docs, style, refactor, test, chore
 
 ---
 
-## ⚠️ REMEMBER: ALWAYS RUN TYPECHECK, LINT, AND BUILD BEFORE PUSHING!
+## ⚠️ REMEMBER: ALWAYS RUN ALL FRONTEND CHECKS IN ONE COMMAND!
 
+```bash
+cd frontend && npm run typecheck && npm run lint && npm run build
+```
+
+**NEVER run these separately - always together in one command!**
 This is non-negotiable. Failed CI/CD builds waste time and resources.
 Quality code is shipped code. 
