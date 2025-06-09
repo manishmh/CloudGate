@@ -8,7 +8,7 @@ const keycloakConfig: KeycloakConfig = {
   clientId: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'cloudgate-frontend',
 };
 
-// Initialize Keycloak instance
+// Initialize Keycloak instance with explicit configuration
 const keycloak = new Keycloak({
   url: keycloakConfig.url,
   realm: keycloakConfig.realm,
@@ -18,9 +18,13 @@ const keycloak = new Keycloak({
 // Keycloak initialization options
 export const keycloakInitOptions = {
   onLoad: 'check-sso' as const,
-  silentCheckSsoRedirectUri: typeof window !== 'undefined' ? `${window.location.origin}/silent-check-sso.html` : undefined,
   checkLoginIframe: false,
   pkceMethod: 'S256' as const,
+  enableLogging: true,
+  flow: 'standard' as const,
+  responseMode: 'fragment' as const,
+  messageReceiveTimeout: 10000,
+  silentCheckSsoRedirectUri: typeof window !== 'undefined' ? `${window.location.origin}/silent-check-sso.html` : undefined,
 };
 
 export { keycloak, keycloakConfig };
@@ -46,10 +50,12 @@ export const refreshToken = async (): Promise<boolean> => {
 
 export const logout = (): void => {
   keycloak.logout({
-    redirectUri: typeof window !== 'undefined' ? window.location.origin : undefined,
+    redirectUri: typeof window !== 'undefined' ? `${window.location.origin}/login` : undefined,
   });
 };
 
 export const login = (): void => {
-  keycloak.login();
+  keycloak.login({
+    redirectUri: typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : undefined,
+  });
 }; 
