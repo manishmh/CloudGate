@@ -1,36 +1,70 @@
-import { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-export const metadata: Metadata = {
-  title: "Terms of Service - CloudGate",
-  description:
-    "CloudGate Terms of Service - Terms and conditions for using our SSO platform",
-};
+// Note: Metadata export doesn't work with 'use client', so we'll set it via Head or document title
+// export const metadata: Metadata = {
+//   title: "Terms of Service - CloudGate",
+//   description:
+//     "CloudGate Terms of Service - Terms and conditions for using our SSO platform",
+// };
 
-async function getTerms() {
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/terms`,
-      {
-        cache: "force-cache", // Cache the terms content
+export default function TermsPage() {
+  const [terms, setTerms] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    // Set document title
+    document.title = "Terms of Service - CloudGate";
+
+    async function fetchTerms() {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/terms`,
+          {
+            cache: "force-cache", // Cache the terms content
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch terms");
+        }
+
+        const content = await response.text();
+        setTerms(content);
+      } catch (error) {
+        console.error("Error fetching terms:", error);
+        setError(true);
+      } finally {
+        setLoading(false);
       }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch terms");
     }
 
-    return await response.text();
-  } catch (error) {
-    console.error("Error fetching terms:", error);
-    return null;
+    fetchTerms();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white shadow-sm rounded-lg p-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-6">
+              Terms of Service
+            </h1>
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6 mb-4"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
-}
 
-export default async function TermsPage() {
-  const terms = await getTerms();
-
-  if (!terms) {
+  if (error || !terms) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

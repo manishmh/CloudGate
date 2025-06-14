@@ -1,38 +1,72 @@
-import { Metadata } from "next";
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy - CloudGate",
-  description:
-    "CloudGate Privacy Policy - How we collect, use, and protect your information",
-};
+// Note: Metadata export doesn't work with 'use client', so we'll set it via Head or document title
+// export const metadata: Metadata = {
+//   title: "Privacy Policy - CloudGate",
+//   description:
+//     "CloudGate Privacy Policy - How we collect, use, and protect your information",
+// };
 
-async function getPrivacyPolicy() {
-  try {
-    const response = await fetch(
-      `${
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
-      }/privacy-policy`,
-      {
-        cache: "force-cache", // Cache the policy content
+export default function PrivacyPolicyPage() {
+  const [privacyPolicy, setPrivacyPolicy] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    // Set document title
+    document.title = "Privacy Policy - CloudGate";
+
+    async function fetchPrivacyPolicy() {
+      try {
+        const response = await fetch(
+          `${
+            process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
+          }/privacy-policy`,
+          {
+            cache: "force-cache", // Cache the policy content
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch privacy policy");
+        }
+
+        const content = await response.text();
+        setPrivacyPolicy(content);
+      } catch (error) {
+        console.error("Error fetching privacy policy:", error);
+        setError(true);
+      } finally {
+        setLoading(false);
       }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch privacy policy");
     }
 
-    return await response.text();
-  } catch (error) {
-    console.error("Error fetching privacy policy:", error);
-    return null;
+    fetchPrivacyPolicy();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white shadow-sm rounded-lg p-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-6">
+              Privacy Policy
+            </h1>
+            <div className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6 mb-4"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
-}
 
-export default async function PrivacyPolicyPage() {
-  const privacyPolicy = await getPrivacyPolicy();
-
-  if (!privacyPolicy) {
+  if (error || !privacyPolicy) {
     return (
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

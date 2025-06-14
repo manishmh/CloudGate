@@ -182,14 +182,25 @@ jobs:
     - name: Build and push frontend image
       working-directory: ./frontend
       run: |
+        # Debug: Check authentication
+        echo "🔍 Checking authentication..."
+        gcloud auth list
+        
         # Create Artifact Registry repository if it doesn't exist
+        echo "📦 Creating/checking Artifact Registry repository..."
         gcloud artifacts repositories create cloudgate-repo \
           --repository-format=docker \
           --location=${{ env.REGION }} \
-          --description="CloudGate application images" || true
+          --description="CloudGate application images" || echo "Repository already exists or creation failed"
+        
+        # List repositories to verify
+        gcloud artifacts repositories list --location=${{ env.REGION }}
         
         # Build and push frontend image to Artifact Registry
+        echo "🏗️ Building frontend image..."
         docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-frontend:latest .
+        
+        echo "📤 Pushing frontend image..."
         docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-frontend:latest
 
     - name: Deploy Frontend to Cloud Run
