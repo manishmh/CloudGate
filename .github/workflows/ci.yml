@@ -231,10 +231,16 @@ jobs:
         echo "🔧 Updating backend CORS settings..."
         echo "Frontend URL: $FRONTEND_URL"
         
-        # Update CORS settings with proper escaping
+        # Create environment variables file to avoid escaping issues
+        cat > env-vars.yaml << EOF
+        ALLOWED_ORIGINS: "${FRONTEND_URL},http://localhost:3000"
+        FRONTEND_URL: "${FRONTEND_URL}"
+        EOF
+        
+        # Update CORS settings using env vars file
         gcloud run services update cloudgate-backend \
           --region=${{ env.REGION }} \
-          --set-env-vars="ALLOWED_ORIGINS=${FRONTEND_URL},http://localhost:3000,FRONTEND_URL=${FRONTEND_URL}"
+          --env-vars-file=env-vars.yaml
 
     - name: Deployment Summary
       run: |
