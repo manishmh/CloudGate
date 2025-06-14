@@ -227,9 +227,14 @@ jobs:
 
     - name: Update Backend CORS
       run: |
+        FRONTEND_URL="${{ steps.frontend-url.outputs.url }}"
+        echo "🔧 Updating backend CORS settings..."
+        echo "Frontend URL: $FRONTEND_URL"
+        
+        # Update CORS settings with proper escaping
         gcloud run services update cloudgate-backend \
           --region=${{ env.REGION }} \
-          --update-env-vars="ALLOWED_ORIGINS=${{ steps.frontend-url.outputs.url }},http://localhost:3000,FRONTEND_URL=${{ steps.frontend-url.outputs.url }}"
+          --set-env-vars="ALLOWED_ORIGINS=${FRONTEND_URL},http://localhost:3000,FRONTEND_URL=${FRONTEND_URL}"
 
     - name: Deployment Summary
       run: |
