@@ -130,20 +130,24 @@ export const APP_LAUNCH_URLS = {
 // Status Colors and Text
 export const STATUS_CONFIG = {
   connected: {
-    color: "bg-green-100 text-green-800",
-    text: "Connected",
+    className: "bg-green-100 text-green-800",
+    label: "Connected",
   },
   pending: {
-    color: "bg-yellow-100 text-yellow-800",
-    text: "Pending",
+    className: "bg-yellow-100 text-yellow-800",
+    label: "Pending",
   },
   available: {
-    color: "bg-gray-100 text-gray-800",
-    text: "Available",
+    className: "bg-gray-100 text-gray-800",
+    label: "Available",
   },
   error: {
-    color: "bg-red-100 text-red-800",
-    text: "Error",
+    className: "bg-red-100 text-red-800",
+    label: "Error",
+  },
+  default: {
+    className: "bg-gray-100 text-gray-800",
+    label: "Available",
   },
 } as const;
 
@@ -277,6 +281,8 @@ export const PROFILE_FIELDS = [
     required: true,
     placeholder: 'Enter your first name',
     readonly: false,
+    disabled: false,
+    helpText: undefined,
   },
   {
     id: 'family_name',
@@ -285,6 +291,8 @@ export const PROFILE_FIELDS = [
     required: true,
     placeholder: 'Enter your last name',
     readonly: false,
+    disabled: false,
+    helpText: undefined,
   },
   {
     id: 'email',
@@ -293,6 +301,8 @@ export const PROFILE_FIELDS = [
     required: true,
     placeholder: 'Enter your email address',
     readonly: true, // Email usually can't be changed in SSO
+    disabled: true,
+    helpText: 'Email cannot be changed after account creation',
   },
   {
     id: 'preferred_username',
@@ -301,6 +311,8 @@ export const PROFILE_FIELDS = [
     required: true,
     placeholder: 'Enter your username',
     readonly: true, // Username usually can't be changed in SSO
+    disabled: true,
+    helpText: 'Username cannot be changed after account creation',
   },
 ] as const;
 
@@ -315,6 +327,8 @@ export const PROFILE_MESSAGES = {
   VALIDATION_ERROR: "Please fill in all required fields.",
   EMAIL_VERIFICATION_SENT: "Verification email sent! Please check your inbox.",
   EMAIL_VERIFICATION_ERROR: "Failed to send verification email. Please try again.",
+  VERIFICATION_SENT: "Verification email sent successfully!",
+  VERIFICATION_ERROR: "Failed to send verification email. Please try again.",
   EMAIL_VERIFIED_SUCCESS: "Email verified successfully!",
   EMAIL_VERIFICATION_INVALID: "Invalid verification link.",
 } as const;
@@ -330,7 +344,216 @@ export const NAV_ITEMS = [
   {
     id: 'profile',
     label: 'Profile',
-    href: '/profile',
-    icon: '��',
+    href: '/dashboard/profile',
+    icon: '👤',
+  },
+] as const;
+
+// Dashboard Navigation Items
+export const DASHBOARD_NAV_ITEMS = [
+  {
+    name: "Dashboard",
+    href: "/dashboard",
+    icon: "HiHome",
+    description: "Overview and quick access",
+  },
+  {
+    name: "Applications",
+    href: "/dashboard/applications",
+    icon: "HiViewGrid",
+    description: "SaaS applications",
+  },
+  {
+    name: "Connections",
+    href: "/dashboard/connections",
+    icon: "HiLink",
+    description: "App connections",
+  },
+  {
+    name: "Security",
+    href: "/dashboard/security",
+    icon: "HiShieldCheck",
+    description: "Security status",
+  },
+  {
+    name: "Quick Actions",
+    href: "/dashboard/quick-actions",
+    icon: "HiLightningBolt",
+    description: "Common tasks",
+  },
+] as const;
+
+// Default App Connections
+export const DEFAULT_APP_CONNECTIONS = [
+  {
+    name: "Google Workspace",
+    status: "connected" as const,
+    icon: "🔍",
+    description: "Access Gmail, Drive, Calendar, and more",
+    connect_url: "/oauth/google/connect",
+    last_used: "2 hours ago",
+  },
+  {
+    name: "Microsoft 365",
+    status: "connected" as const,
+    icon: "🏢",
+    description: "Access Outlook, OneDrive, Teams, and more",
+    connect_url: "/oauth/microsoft/connect",
+    last_used: "1 day ago",
+  },
+  {
+    name: "Slack",
+    status: "disconnected" as const,
+    icon: "💬",
+    description: "Access your Slack workspaces",
+    connect_url: "/oauth/slack/connect",
+  },
+  {
+    name: "GitHub",
+    status: "connected" as const,
+    icon: "🐙",
+    description: "Access your repositories and organizations",
+    connect_url: "/oauth/github/connect",
+    last_used: "3 hours ago",
+  },
+  {
+    name: "Trello",
+    status: "disconnected" as const,
+    icon: "📋",
+    description: "Manage your boards and projects",
+    connect_url: "/oauth/trello/connect",
+  },
+] as const;
+
+// Default Recent Activity
+export const DEFAULT_RECENT_ACTIVITY = [
+  {
+    id: "1",
+    type: "login" as const,
+    description: "Successful login from New York, NY",
+    timestamp: "2 minutes ago",
+    icon: "HiShieldCheck",
+    severity: "success" as const,
+  },
+  {
+    id: "2",
+    type: "app_launch" as const,
+    description: "Launched Google Workspace",
+    timestamp: "2 hours ago",
+    icon: "HiViewGrid",
+    severity: "info" as const,
+  },
+  {
+    id: "3",
+    type: "connection" as const,
+    description: "Connected to GitHub successfully",
+    timestamp: "1 day ago",
+    icon: "HiLink",
+    severity: "success" as const,
+  },
+  {
+    id: "4",
+    type: "security" as const,
+    description: "Security scan completed - no issues found",
+    timestamp: "2 days ago",
+    icon: "HiShieldCheck",
+    severity: "success" as const,
+  },
+  {
+    id: "5",
+    type: "login" as const,
+    description: "Failed login attempt blocked",
+    timestamp: "3 days ago",
+    icon: "HiExclamationCircle",
+    severity: "warning" as const,
+  },
+] as const;
+
+// Default Dashboard Metrics
+export const DEFAULT_DASHBOARD_METRICS = {
+  totalApps: 5,
+  connectedApps: 3,
+  recentLogins: 12,
+  securityScore: 95,
+  lastActivity: "2 minutes ago",
+} as const;
+
+// Dashboard Quick Actions
+export const DASHBOARD_QUICK_ACTIONS = [
+  {
+    id: "manage-apps",
+    title: "Manage Apps",
+    description: "Connect and configure applications",
+    href: "/dashboard/applications",
+    icon: "HiViewGrid",
+    color: "blue",
+    gradient: "from-blue-500 to-blue-600",
+  },
+  {
+    id: "security-center",
+    title: "Security Center",
+    description: "Review security settings",
+    href: "/dashboard/security",
+    icon: "HiShieldCheck",
+    color: "green",
+    gradient: "from-green-500 to-green-600",
+  },
+  {
+    id: "connections",
+    title: "Connections",
+    description: "Manage app connections",
+    href: "/dashboard/connections",
+    icon: "HiLink",
+    color: "yellow",
+    gradient: "from-yellow-500 to-yellow-600",
+  },
+  {
+    id: "settings",
+    title: "Settings",
+    description: "Customize your experience",
+    href: "/dashboard/settings",
+    icon: "HiLightningBolt",
+    color: "purple",
+    gradient: "from-purple-500 to-purple-600",
+  },
+] as const;
+
+// Dashboard Feature Cards
+export const DASHBOARD_FEATURE_CARDS = [
+  {
+    id: "adaptive-security",
+    title: "Adaptive Security",
+    description: "AI-powered threat detection and response",
+    icon: "🛡️",
+    stats: "99.9% uptime",
+    color: "from-blue-600 to-purple-600",
+    features: ["Real-time monitoring", "Threat intelligence", "Auto-response"],
+  },
+  {
+    id: "seamless-sso",
+    title: "Seamless SSO",
+    description: "One-click access to all your applications",
+    icon: "🔐",
+    stats: "Sub-second login",
+    color: "from-green-500 to-teal-600",
+    features: ["SAML 2.0", "OAuth 2.0", "OpenID Connect"],
+  },
+  {
+    id: "enterprise-ready",
+    title: "Enterprise Ready",
+    description: "Scalable infrastructure for teams of any size",
+    icon: "🏢",
+    stats: "10K+ users",
+    color: "from-orange-500 to-red-600",
+    features: ["99.99% SLA", "24/7 support", "Global CDN"],
+  },
+  {
+    id: "compliance",
+    title: "Compliance First",
+    description: "Meet industry standards and regulations",
+    icon: "📋",
+    stats: "SOC 2 Type II",
+    color: "from-purple-500 to-pink-600",
+    features: ["GDPR ready", "HIPAA compliant", "ISO 27001"],
   },
 ] as const; 

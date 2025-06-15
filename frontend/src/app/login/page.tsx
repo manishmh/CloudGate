@@ -10,7 +10,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (initialized && keycloak?.authenticated) {
-      router.push("/dashboard");
+      // Use replace instead of push to avoid back button issues
+      router.replace("/dashboard");
     }
   }, [initialized, keycloak?.authenticated, router]);
 
@@ -23,7 +24,22 @@ export default function LoginPage() {
   if (!initialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Initializing...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading screen if already authenticated to prevent flash
+  if (keycloak?.authenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Redirecting to dashboard...</p>
+        </div>
       </div>
     );
   }

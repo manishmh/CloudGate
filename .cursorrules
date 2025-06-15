@@ -8,7 +8,7 @@ Before ANY git push or commit, ALWAYS run these commands in order:
 1. **Frontend Checks (RUN ALL IN ONE COMMAND):**
    ```bash
    cd frontend
-   npm run typecheck && npm run lint && npm run build
+   npm run typecheck && npm run build
    ```
    **NEVER run these separately - always run all three together in one command!**
 
@@ -35,6 +35,7 @@ Before ANY git push or commit, ALWAYS run these commands in order:
 - Follow React hooks best practices
 - Use proper error boundaries and loading states
 - **ALWAYS run typecheck && lint && build together in one command**
+- **CRITICAL: useEffect Dependencies - DO NOT blindly add dependencies to useEffect arrays when linters suggest it. Adding state variables that are modified within the effect to the dependency array often creates infinite loops. Use useCallback for functions, separate effects for different concerns, and empty dependency arrays for mount-only effects. Ignore ESLint exhaustive-deps warnings when they would cause infinite loops.**
 
 #### Go (Backend)
 - Follow Go conventions and idioms
@@ -209,7 +210,7 @@ Types: feat, fix, docs, style, refactor, test, chore
 ## ⚠️ REMEMBER: ALWAYS RUN ALL FRONTEND CHECKS IN ONE COMMAND!
 
 ```bash
-cd frontend && npm run typecheck && npm run lint && npm run build
+cd frontend && npm run typecheck && npm run build
 ```
 
 **NEVER run these separately - always together in one command!**

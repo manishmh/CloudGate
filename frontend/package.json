@@ -13,6 +13,7 @@
   "dependencies": {
     "@react-keycloak/ssr": "^3.3.0",
     "@react-keycloak/web": "^3.4.0",
+    "@reduxjs/toolkit": "^2.8.2",
     "@types/keycloak-js": "^2.5.4",
     "@types/nodemailer": "^6.4.17",
     "keycloak-js": "^26.2.0",
@@ -21,7 +22,8 @@
     "nodemailer": "^7.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-icons": "^5.5.0"
+    "react-icons": "^5.5.0",
+    "react-redux": "^9.2.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

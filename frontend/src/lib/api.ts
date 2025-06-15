@@ -31,6 +31,71 @@ export interface AppsResponse {
   count: number;
 }
 
+// Dashboard types
+export interface UserProfile {
+  id: string;
+  email: string;
+  username: string;
+  first_name: string;
+  last_name: string;
+  profile_picture_url?: string;
+  last_login_at?: string;
+}
+
+export interface DashboardMetrics {
+  total_apps: number;
+  connected_apps: number;
+  recent_logins: number;
+  security_score: number;
+  last_activity: string;
+}
+
+export interface AppConnection {
+  name: string;
+  status: 'connected' | 'disconnected';
+  icon: string;
+  description: string;
+  connect_url: string;
+  last_used?: string;
+}
+
+export interface ActivityItem {
+  id: string;
+  type: 'login' | 'app_launch' | 'connection' | 'security';
+  description: string;
+  timestamp: string;
+  icon: string;
+  severity: 'info' | 'warning' | 'success';
+}
+
+export interface FeatureCard {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  stats: string;
+  color: string;
+  features: string[];
+}
+
+export interface DashboardData {
+  user: UserProfile;
+  metrics: DashboardMetrics;
+  connections: AppConnection[];
+  recent_activity: ActivityItem[];
+  features: FeatureCard[];
+}
+
+export interface DashboardResponse {
+  success: boolean;
+  data: DashboardData;
+}
+
+export interface MetricsResponse {
+  success: boolean;
+  metrics: DashboardMetrics;
+}
+
 // API client class
 class ApiClient {
   private baseURL: string;
@@ -119,6 +184,15 @@ class ApiClient {
   async healthCheck(): Promise<{ status: string; timestamp: string; service: string }> {
     return this.request<{ status: string; timestamp: string; service: string }>('/health');
   }
+
+  // Dashboard methods
+  async getDashboardData(): Promise<DashboardResponse> {
+    return this.request<DashboardResponse>('/dashboard/data');
+  }
+
+  async getDashboardMetrics(): Promise<MetricsResponse> {
+    return this.request<MetricsResponse>('/dashboard/metrics');
+  }
 }
 
 // Export singleton instance
@@ -130,4 +204,6 @@ export const {
   connectApp,
   launchApp,
   healthCheck,
+  getDashboardData,
+  getDashboardMetrics,
 } = apiClient; 

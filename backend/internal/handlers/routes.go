@@ -13,9 +13,11 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 	db := services.GetDB()
 	userService := services.NewUserService(db)
 	sessionService := services.NewSessionService(db)
+	settingsService := services.NewUserSettingsService(db)
 
 	// Initialize handlers
 	userHandlers := NewUserHandlers(userService, sessionService)
+	settingsHandlers := NewSettingsHandlers(settingsService)
 
 	// Health check endpoint
 	router.GET("/health", HealthCheckHandler)
@@ -46,6 +48,15 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 		userGroup.DELETE("/sessions/:token", userHandlers.InvalidateSession)
 		userGroup.DELETE("/sessions", userHandlers.InvalidateAllSessions)
 		userGroup.DELETE("/account", userHandlers.DeactivateAccount)
+	}
+
+	// User settings endpoints
+	userSettingsGroup := router.Group("/user/settings")
+	{
+		userSettingsGroup.GET("", settingsHandlers.GetUserSettings)
+		userSettingsGroup.PUT("", settingsHandlers.UpdateUserSettings)
+		userSettingsGroup.PUT("/single", settingsHandlers.UpdateSingleSetting)
+		userSettingsGroup.POST("/reset", settingsHandlers.ResetUserSettings)
 	}
 
 	// SaaS Applications endpoints
@@ -81,5 +92,13 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 		adminGroup.GET("/stats", AdminStatsHandler)
 		adminGroup.GET("/users", AdminUsersHandler)
 		adminGroup.GET("/sessions", AdminSessionsHandler)
+	}
+
+	// Dashboard routes
+	dashboardHandlers := NewDashboardHandlers(userService, settingsService)
+	dashboardGroup := router.Group("/dashboard")
+	{
+		dashboardGroup.GET("/data", dashboardHandlers.GetDashboardData)
+		dashboardGroup.GET("/metrics", dashboardHandlers.GetDashboardMetrics)
 	}
 }

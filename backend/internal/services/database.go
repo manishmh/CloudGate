@@ -147,6 +147,7 @@ func runMigrations() error {
 		&models.AppToken{},
 		&models.AuditLog{},
 		&models.EmailVerification{},
+		&models.UserSettings{},
 	)
 
 	if err != nil {

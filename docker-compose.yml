@@ -52,11 +52,10 @@ services:
         ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 60s
+      retries: 10
+      start_period: 120s
 
   # Go Backend API
-  # Note: For production, use Neon DB instead of local PostgreSQL
   backend:
     build:
       context: ./backend
@@ -68,7 +67,8 @@ services:
       KEYCLOAK_CLIENT_ID: cloudgate-frontend
       PORT: 8081
       ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001
-      GIN_MODE: release
+      GIN_MODE: debug
+      LOG_LEVEL: debug
     ports:
       - "8081:8081"
     depends_on:
@@ -81,28 +81,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # Next.js Frontend (for development)
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    container_name: cloudgate-frontend
-    environment:
-      NEXT_PUBLIC_KEYCLOAK_URL: http://localhost:8080
-      NEXT_PUBLIC_KEYCLOAK_REALM: cloudgate
-      NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: cloudgate-frontend
-      NEXT_PUBLIC_API_URL: http://localhost:8081
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
-    depends_on:
-      - backend
-    networks:
-      - cloudgate-network
+      start_period: 30s
 
 volumes:
   postgres_data:
