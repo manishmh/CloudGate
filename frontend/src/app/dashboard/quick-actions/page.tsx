@@ -78,7 +78,9 @@ export default function QuickActionsPage() {
       icon: "🔑",
       action: () => {
         window.open(
-          "http://localhost:8080/realms/cloudgate/account/",
+          `${
+            process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8080"
+          }/realms/cloudgate/account/`,
           "_blank"
         );
       },

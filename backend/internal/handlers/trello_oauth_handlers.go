@@ -66,7 +66,7 @@ func getTrelloOAuthConfig() *TrelloOAuthConfig {
 	return &TrelloOAuthConfig{
 		APIKey:          getEnv("TRELLO_CLIENT_ID", ""),
 		APISecret:       getEnv("TRELLO_CLIENT_SECRET", ""),
-		CallbackURL:     getEnv("TRELLO_REDIRECT_URI", "http://localhost:8081/oauth/trello/callback"),
+		CallbackURL:     getEnv("TRELLO_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/trello/callback"),
 		RequestTokenURL: "https://trello.com/1/OAuthGetRequestToken",
 		AuthorizeURL:    "https://trello.com/1/OAuthAuthorizeToken",
 		AccessTokenURL:  "https://trello.com/1/OAuthGetAccessToken",

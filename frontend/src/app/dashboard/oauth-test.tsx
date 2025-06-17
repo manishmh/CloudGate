@@ -278,10 +278,13 @@ export default function OAuthTest() {
                 {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}
               </p>
               <p>
-                <strong>Frontend URL:</strong> http://localhost:3000
+                <strong>Frontend URL:</strong>{" "}
+                {process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}
               </p>
               <p>
-                <strong>Keycloak URL:</strong> http://localhost:8080
+                <strong>Keycloak URL:</strong>{" "}
+                {process.env.NEXT_PUBLIC_KEYCLOAK_URL ||
+                  "http://localhost:8080"}
               </p>
               <p>
                 <strong>Current URL:</strong>{" "}

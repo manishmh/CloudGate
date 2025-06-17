@@ -208,10 +208,12 @@ func ConnectAppHandler(c *gin.Context) {
 
 	// Generate OAuth URL
 	state := services.GenerateState()
+	// Use NEXT_PUBLIC_API_URL if available (for production), otherwise fallback to localhost
+	backendURL := getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")
 	authURL := fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&scope=%s&response_type=code&state=%s",
 		app.Config["auth_url"],
 		app.Config["client_id"],
-		url.QueryEscape("http://localhost:8081/apps/callback"),
+		url.QueryEscape(backendURL+"/apps/callback"),
 		url.QueryEscape(app.Config["scope"]),
 		state,
 	)
@@ -310,7 +312,8 @@ func OAuthCallbackHandler(c *gin.Context) {
 	}
 
 	// Redirect back to frontend
-	c.Redirect(http.StatusFound, "http://localhost:3000/dashboard?connected="+appID)
+	frontendURL := getEnv("FRONTEND_URL", "http://localhost:3000")
+	c.Redirect(http.StatusFound, frontendURL+"/dashboard?connected="+appID)
 }
 
 // Helper function to extract user ID from context

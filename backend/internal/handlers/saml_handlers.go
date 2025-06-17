@@ -179,7 +179,7 @@ func SAMLInitHandler(c *gin.Context) {
 		IssueInstant:                issueInstant,
 		Destination:                 app.Config["sso_url"],
 		ProtocolBinding:             "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
-		AssertionConsumerServiceURL: fmt.Sprintf("http://localhost:8081/saml/%s/acs", appID),
+		AssertionConsumerServiceURL: fmt.Sprintf("%s/saml/%s/acs", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081"), appID),
 		Issuer: SAMLIssuer{
 			Value: "CloudGate-SSO",
 		},
@@ -293,7 +293,7 @@ func SAMLACSHandler(c *gin.Context) {
 // SAMLMetadataHandler provides SAML metadata for CloudGate as IdP
 func SAMLMetadataHandler(c *gin.Context) {
 	// Get base URL from environment or use default
-	baseURL := getEnv("BACKEND_URL", "http://localhost:8081")
+	baseURL := getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")
 
 	metadata := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
 <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
