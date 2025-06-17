@@ -39,6 +39,7 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 
 	// User profile endpoints
 	userGroup := router.Group("/user")
+	userGroup.Use(middleware.AuthenticationMiddleware())
 	{
 		userGroup.GET("/profile", userHandlers.GetProfile)
 		userGroup.PUT("/profile", userHandlers.UpdateProfile)
@@ -53,6 +54,7 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 
 	// User settings endpoints
 	userSettingsGroup := router.Group("/user/settings")
+	userSettingsGroup.Use(middleware.AuthenticationMiddleware())
 	{
 		userSettingsGroup.GET("", settingsHandlers.GetUserSettings)
 		userSettingsGroup.PUT("", settingsHandlers.UpdateUserSettings)
@@ -62,6 +64,7 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 
 	// MFA endpoints
 	mfaGroup := router.Group("/user/mfa")
+	mfaGroup.Use(middleware.AuthenticationMiddleware())
 	{
 		mfaGroup.GET("/status", GetMFAStatusHandler)
 		mfaGroup.POST("/setup", SetupMFAHandler)
@@ -73,6 +76,7 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 
 	// OAuth Monitoring endpoints
 	monitoringGroup := router.Group("/user/monitoring")
+	monitoringGroup.Use(middleware.AuthenticationMiddleware())
 	{
 		// Connection monitoring
 		monitoringGroup.GET("/connections", GetConnectionsHandler)
@@ -152,6 +156,36 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 	{
 		dashboardGroup.GET("/data", dashboardHandlers.GetDashboardData)
 		dashboardGroup.GET("/metrics", dashboardHandlers.GetDashboardMetrics)
+	}
+
+	// SAML SSO endpoints
+	samlGroup := router.Group("/saml")
+	{
+		samlGroup.GET("/:app_id/init", SAMLInitHandler)
+		samlGroup.POST("/:app_id/acs", SAMLACSHandler)
+		samlGroup.GET("/metadata", SAMLMetadataHandler)
+	}
+
+	// WebAuthn endpoints
+	webauthnGroup := router.Group("/webauthn")
+	webauthnGroup.Use(middleware.AuthenticationMiddleware())
+	{
+		webauthnGroup.POST("/register/begin", WebAuthnRegistrationBeginHandler)
+		webauthnGroup.POST("/register/finish", WebAuthnRegistrationFinishHandler)
+		webauthnGroup.POST("/authenticate/begin", WebAuthnAuthenticationBeginHandler)
+		webauthnGroup.POST("/authenticate/finish", WebAuthnAuthenticationFinishHandler)
+		webauthnGroup.GET("/credentials", GetWebAuthnCredentialsHandler)
+		webauthnGroup.DELETE("/credentials/:credential_id", DeleteWebAuthnCredentialHandler)
+	}
+
+	// Risk assessment endpoints
+	riskGroup := router.Group("/risk")
+	riskGroup.Use(middleware.AuthenticationMiddleware())
+	{
+		riskGroup.POST("/assess", AssessRiskHandler)
+		riskGroup.GET("/policy", GetPolicyDecisionHandler)
+		riskGroup.GET("/history", GetRiskHistoryHandler)
+		riskGroup.PUT("/thresholds", UpdateRiskThresholdsHandler)
 	}
 
 }

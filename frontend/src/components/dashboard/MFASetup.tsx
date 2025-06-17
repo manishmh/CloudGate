@@ -227,16 +227,16 @@ export default function MFASetup({ onMFAStatusChange }: MFASetupProps) {
                 </button>
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex space-x-3 text-sm">
                 <button
                   onClick={() => setStep("backup")}
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  className="max-w-2xs bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
                 >
                   Regenerate Backup Codes
                 </button>
                 <button
                   onClick={() => setStep("verify")}
-                  className="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                  className="max-w-2xs bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
                 >
                   Disable MFA
                 </button>
@@ -444,7 +444,7 @@ export default function MFASetup({ onMFAStatusChange }: MFASetupProps) {
                   (code, index) => (
                     <div
                       key={index}
-                      className="bg-white px-3 py-2 rounded border"
+                      className="bg-white px-3 py-2 rounded border text-black/70"
                     >
                       <code className="text-sm font-mono">
                         {showBackupCodes ? code : "••••••••••"}
@@ -478,7 +478,7 @@ export default function MFASetup({ onMFAStatusChange }: MFASetupProps) {
                     )
                   }
                   placeholder="123456"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 text-black/70 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   maxLength={6}
                 />
               </div>
@@ -486,7 +486,7 @@ export default function MFASetup({ onMFAStatusChange }: MFASetupProps) {
               <button
                 onClick={regenerateBackupCodes}
                 disabled={loading || verificationCode.length !== 6}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
+                className="max-w-2xs bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
               >
                 {loading ? "Regenerating..." : "Regenerate Backup Codes"}
               </button>

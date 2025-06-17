@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"cloudgate-backend/internal/config"
 	"cloudgate-backend/internal/services"
@@ -692,10 +693,17 @@ func OAuthCallbackHandler(c *gin.Context) {
 }
 
 // Helper function to extract user ID from context
-// In production, this would parse the JWT token
+// This gets the user ID set by the authentication middleware
 func getUserIDFromContext(c *gin.Context) string {
-	// For demo purposes, return a fixed user ID
-	// In production, you would extract this from the JWT token
+	// Try to get userID from context (set by authentication middleware)
+	userIDInterface, exists := c.Get("userID")
+	if exists {
+		if userID, ok := userIDInterface.(uuid.UUID); ok {
+			return userID.String()
+		}
+	}
+
+	// Fallback: For endpoints without authentication middleware
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
 		return ""

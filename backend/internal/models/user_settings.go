@@ -24,6 +24,13 @@ type UserSettings struct {
 	AppUpdates         bool `gorm:"default:true" json:"app_updates"`
 	WeeklyReports      bool `gorm:"default:false" json:"weekly_reports"`
 
+	// Security Settings
+	TwoFactorEnabled         bool `gorm:"default:false" json:"two_factor_enabled"`
+	LoginNotifications       bool `gorm:"default:true" json:"login_notifications"`
+	SuspiciousActivityAlerts bool `gorm:"default:true" json:"suspicious_activity_alerts"`
+	SessionTimeout           int  `gorm:"default:30" json:"session_timeout"` // in minutes
+	PasswordExpiryDays       int  `gorm:"default:90" json:"password_expiry_days"`
+
 	// Dashboard
 	DefaultView     string `gorm:"default:'dashboard'" json:"default_view"`
 	ItemsPerPage    int    `gorm:"default:10" json:"items_per_page"`
@@ -58,23 +65,28 @@ func (us *UserSettings) BeforeCreate(tx *gorm.DB) error {
 // GetDefaultSettings returns default user settings
 func GetDefaultSettings() *UserSettings {
 	return &UserSettings{
-		Language:           "en",
-		Timezone:           "America/New_York",
-		DateFormat:         "MM/DD/YYYY",
-		EmailNotifications: true,
-		PushNotifications:  false,
-		SecurityAlerts:     true,
-		AppUpdates:         true,
-		WeeklyReports:      false,
-		DefaultView:        "dashboard",
-		ItemsPerPage:       10,
-		AutoRefresh:        true,
-		RefreshInterval:    30,
-		AnalyticsOptIn:     true,
-		ShareUsageData:     false,
-		PersonalizedAds:    false,
-		APIAccess:          false,
-		WebhookURL:         "",
-		MaxAPICalls:        1000,
+		Language:                 "en",
+		Timezone:                 "America/New_York",
+		DateFormat:               "MM/DD/YYYY",
+		EmailNotifications:       true,
+		PushNotifications:        false,
+		SecurityAlerts:           true,
+		AppUpdates:               true,
+		WeeklyReports:            false,
+		TwoFactorEnabled:         false,
+		LoginNotifications:       true,
+		SuspiciousActivityAlerts: true,
+		SessionTimeout:           30,
+		PasswordExpiryDays:       90,
+		DefaultView:              "dashboard",
+		ItemsPerPage:             10,
+		AutoRefresh:              true,
+		RefreshInterval:          30,
+		AnalyticsOptIn:           true,
+		ShareUsageData:           false,
+		PersonalizedAds:          false,
+		APIAccess:                false,
+		WebhookURL:               "",
+		MaxAPICalls:              1000,
 	}
 }

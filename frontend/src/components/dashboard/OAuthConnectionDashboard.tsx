@@ -37,6 +37,13 @@ export default function OAuthConnectionDashboard() {
     }
   }, [autoRefresh]);
 
+  // Auto-expand first connection details
+  useEffect(() => {
+    if (connections.length > 0 && !selectedConnection) {
+      setSelectedConnection(connections[0].id);
+    }
+  }, [connections, selectedConnection]);
+
   const loadConnections = async () => {
     try {
       setLoading(true);

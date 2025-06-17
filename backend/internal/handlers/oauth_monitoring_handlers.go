@@ -20,7 +20,7 @@ func GetConnectionsHandler(c *gin.Context) {
 	monitoringService := services.NewOAuthMonitoringService(services.GetDB())
 	connections, err := monitoringService.GetUserConnections(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get connections"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get connections", "details": err.Error()})
 		return
 	}
 

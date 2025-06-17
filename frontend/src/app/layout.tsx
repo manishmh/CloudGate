@@ -5,6 +5,7 @@ import { ReactKeycloakProvider } from "@react-keycloak/web";
 import Keycloak from "keycloak-js";
 import { Inter } from "next/font/google";
 import { Provider } from "react-redux";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -29,6 +30,7 @@ export default function RootLayout({
         <Provider store={store}>
           <ReactKeycloakProvider authClient={keycloak}>
             {children}
+            <Toaster position="top-right" richColors />
           </ReactKeycloakProvider>
         </Provider>
       </body>

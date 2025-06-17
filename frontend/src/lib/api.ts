@@ -357,6 +357,31 @@ class ApiClient {
       method: 'DELETE',
     });
   }
+
+  // User Settings APIs
+  async getUserSettings(): Promise<{ settings: UserSettings }> {
+    return this.request<{ settings: UserSettings }>('/user/settings');
+  }
+
+  async updateUserSettings(settings: Partial<UserSettings>): Promise<{ settings: UserSettings }> {
+    return this.request<{ settings: UserSettings }>('/user/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    });
+  }
+
+  async updateSingleSetting(key: string, value: boolean | number | string): Promise<{ settings: UserSettings }> {
+    return this.request<{ settings: UserSettings }>('/user/settings/single', {
+      method: 'PUT',
+      body: JSON.stringify({ key, value }),
+    });
+  }
+
+  async resetUserSettings(): Promise<UserSettings> {
+    return this.request<UserSettings>('/user/settings/reset', {
+      method: 'POST',
+    });
+  }
 }
 
 // Additional types for OAuth monitoring
@@ -443,6 +468,27 @@ export interface RegisterDeviceRequest {
   os: string;
   fingerprint: string;
   location?: string;
+}
+
+export interface UserSettings {
+  id: string;
+  user_id: string;
+  language: string;
+  timezone: string;
+  theme: string;
+  email_notifications: boolean;
+  push_notifications: boolean;
+  security_alerts: boolean;
+  marketing_emails: boolean;
+  session_timeout: number;
+  auto_logout: boolean;
+  two_factor_enabled: boolean;
+  backup_codes_remaining: number;
+  password_expiry_days: number;
+  login_notifications: boolean;
+  suspicious_activity_alerts: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 // Export singleton instance

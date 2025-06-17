@@ -292,7 +292,7 @@ export default function SecurityEnhancements() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-6">
       {/* Risk Assessment */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-6">

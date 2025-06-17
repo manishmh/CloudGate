@@ -159,6 +159,10 @@ func runMigrations() error {
 		&models.ConnectionHealthMetrics{},
 		&models.SecurityEvent{},
 		&models.TrustedDevice{},
+		&RiskAssessment{},
+		&RiskThresholds{},
+		&DeviceFingerprint{},
+		&WebAuthnCredential{},
 	)
 
 	if err != nil {
