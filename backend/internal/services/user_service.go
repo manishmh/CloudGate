@@ -235,3 +235,32 @@ func (s *UserService) DeactivateUser(userID uuid.UUID) error {
 
 	return nil
 }
+
+// GetOrCreateDemoUser gets or creates the demo user for development
+func (us *UserService) GetOrCreateDemoUser() (*models.User, error) {
+	demoUserUUID, _ := uuid.Parse("12345678-1234-1234-1234-123456789012")
+
+	// Try to get existing demo user
+	user, err := us.GetUserByID(demoUserUUID)
+	if err == nil {
+		return user, nil
+	}
+
+	// Create demo user if it doesn't exist
+	demoUser := &models.User{
+		ID:            demoUserUUID,
+		KeycloakID:    "demo-keycloak-id",
+		Email:         "demo@cloudgate.com",
+		Username:      "demo-user",
+		FirstName:     "Demo",
+		LastName:      "User",
+		IsActive:      true,
+		EmailVerified: true,
+	}
+
+	if err := us.db.Create(demoUser).Error; err != nil {
+		return nil, fmt.Errorf("failed to create demo user: %w", err)
+	}
+
+	return demoUser, nil
+}

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	"cloudgate-backend/internal/config"
 	"cloudgate-backend/internal/handlers"
@@ -14,6 +15,14 @@ import (
 )
 
 func main() {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Printf("Warning: No .env file found or error loading .env file: %v", err)
+		log.Printf("Continuing with system environment variables...")
+	} else {
+		log.Printf("Successfully loaded .env file")
+	}
+
 	// Load configuration
 	cfg := config.LoadConfig()
 
@@ -26,6 +35,15 @@ func main() {
 	// Initialize SaaS applications
 	services.InitializeSaaSApps()
 
+	// Initialize demo user for development
+	userService := services.NewUserService(services.GetDB())
+	_, err := userService.GetOrCreateDemoUser()
+	if err != nil {
+		log.Printf("Warning: Failed to create demo user: %v", err)
+	} else {
+		log.Printf("Demo user initialized successfully")
+	}
+
 	// Set Gin mode
 	if os.Getenv("GIN_MODE") == "" {
 		gin.SetMode(gin.DebugMode)
@@ -37,6 +55,7 @@ func main() {
 	// Setup middleware
 	router.Use(middleware.SetupCORS(cfg))
 	router.Use(middleware.SecurityHeadersMiddleware())
+	router.Use(handlers.RequestResponseLogger()) // Add detailed logging
 
 	// Setup routes
 	handlers.SetupRoutes(router, cfg)

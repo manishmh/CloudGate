@@ -1,5 +1,18 @@
 import { API_CONFIG, ERROR_MESSAGES } from '@/constants';
 
+// OAuth endpoint mapping - maps app IDs to OAuth endpoint paths
+const OAUTH_ENDPOINT_MAP: Record<string, string> = {
+  'google-workspace': 'google',
+  'microsoft-365': 'microsoft',
+  'slack': 'slack',
+  'salesforce': 'salesforce',
+  'jira': 'jira',
+  'trello': 'trello',
+  'notion': 'notion',
+  'github': 'github',
+  'dropbox': 'dropbox',
+};
+
 // Types for API responses
 export interface SaaSApplication {
   id: string;
@@ -8,15 +21,21 @@ export interface SaaSApplication {
   description: string;
   category: string;
   protocol: string;
-  status: 'available' | 'connected' | 'pending';
+  status: 'available' | 'connected' | 'pending' | 'error';
   created_at: string;
   updated_at: string;
+  connection_details?: {
+    user_email?: string;
+    user_name?: string;
+    connected_at?: string;
+    last_used?: string;
+  };
 }
 
 export interface AppConnectionResponse {
   auth_url: string;
   state: string;
-  challenge?: string;
+  provider: string;
 }
 
 export interface AppLaunchResponse {
@@ -29,6 +48,24 @@ export interface AppLaunchResponse {
 export interface AppsResponse {
   apps: SaaSApplication[];
   count: number;
+}
+
+// MFA Types
+export interface MFASetupResponse {
+  secret: string;
+  qr_code_url: string;
+  qr_code_data_url: string;
+  backup_codes: string[];
+}
+
+export interface MFAStatusResponse {
+  enabled: boolean;
+  setup_date?: string;
+  backup_codes_remaining: number;
+}
+
+export interface MFAVerifyRequest {
+  code: string;
 }
 
 // Dashboard types
@@ -141,7 +178,8 @@ class ApiClient {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       return await response.json();
@@ -157,21 +195,28 @@ class ApiClient {
   }
 
   private getAuthToken(): string | null {
-    // In a real app, this would get the token from your auth provider
-    // For demo purposes, we'll use a dummy token
-    return 'demo-token';
+    // In a real app, this would get the token from your auth provider (Keycloak)
+    // For now, we'll use a demo token - this should be replaced with real Keycloak integration
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('auth_token') || 'demo-user-token';
+    }
+    return 'demo-user-token';
   }
 
-  // API methods
+  // Health check
+  async healthCheck(): Promise<{ status: string; timestamp: string; service: string }> {
+    return this.request<{ status: string; timestamp: string; service: string }>('/health');
+  }
+
+  // Apps API methods
   async getApps(): Promise<AppsResponse> {
     return this.request<AppsResponse>('/apps');
   }
 
   async connectApp(appId: string): Promise<AppConnectionResponse> {
-    return this.request<AppConnectionResponse>('/apps/connect', {
-      method: 'POST',
-      body: JSON.stringify({ app_id: appId }),
-    });
+    // Map app ID to OAuth endpoint path
+    const oauthEndpoint = OAUTH_ENDPOINT_MAP[appId] || appId;
+    return this.request<AppConnectionResponse>(`/oauth/${oauthEndpoint}/connect`);
   }
 
   async launchApp(appId: string): Promise<AppLaunchResponse> {
@@ -181,8 +226,43 @@ class ApiClient {
     });
   }
 
-  async healthCheck(): Promise<{ status: string; timestamp: string; service: string }> {
-    return this.request<{ status: string; timestamp: string; service: string }>('/health');
+  // MFA API methods
+  async getMFAStatus(): Promise<MFAStatusResponse> {
+    return this.request<MFAStatusResponse>('/user/mfa/status');
+  }
+
+  async setupMFA(): Promise<MFASetupResponse> {
+    return this.request<MFASetupResponse>('/user/mfa/setup', {
+      method: 'POST',
+    });
+  }
+
+  async verifyMFASetup(code: string): Promise<{ message: string; enabled: boolean }> {
+    return this.request<{ message: string; enabled: boolean }>('/user/mfa/verify-setup', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  }
+
+  async verifyMFA(code: string): Promise<{ message: string; verified: boolean }> {
+    return this.request<{ message: string; verified: boolean }>('/user/mfa/verify', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  }
+
+  async disableMFA(code: string): Promise<{ message: string; enabled: boolean }> {
+    return this.request<{ message: string; enabled: boolean }>('/user/mfa/disable', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
+  }
+
+  async regenerateBackupCodes(code: string): Promise<{ message: string; backup_codes: string[] }> {
+    return this.request<{ message: string; backup_codes: string[] }>('/user/mfa/backup-codes/regenerate', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    });
   }
 
   // Dashboard methods
@@ -192,6 +272,28 @@ class ApiClient {
 
   async getDashboardMetrics(): Promise<MetricsResponse> {
     return this.request<MetricsResponse>('/dashboard/metrics');
+  }
+
+  // User profile methods
+  async getUserProfile(): Promise<UserProfile> {
+    return this.request<UserProfile>('/user/profile');
+  }
+
+  async updateUserProfile(profile: Partial<UserProfile>): Promise<UserProfile> {
+    return this.request<UserProfile>('/user/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profile),
+    });
+  }
+
+  // Utility method to check if backend is available
+  async isBackendAvailable(): Promise<boolean> {
+    try {
+      await this.healthCheck();
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 
@@ -206,4 +308,13 @@ export const {
   healthCheck,
   getDashboardData,
   getDashboardMetrics,
+  getMFAStatus,
+  setupMFA,
+  verifyMFASetup,
+  verifyMFA,
+  disableMFA,
+  regenerateBackupCodes,
+  getUserProfile,
+  updateUserProfile,
+  isBackendAvailable,
 } = apiClient; 

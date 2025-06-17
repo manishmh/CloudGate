@@ -81,11 +81,22 @@ export const FALLBACK_SAAS_APPS = [
     updated_at: new Date().toISOString(),
   },
   {
-    id: "confluence",
-    name: "Confluence",
+    id: "trello",
+    name: "Trello",
+    icon: "📋",
+    description: "Project management and task organization",
+    category: "project-management",
+    protocol: "oauth1",
+    status: "available",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "notion",
+    name: "Notion",
     icon: "📝",
-    description: "Team workspace and knowledge management",
-    category: "documentation",
+    description: "All-in-one workspace for notes and collaboration",
+    category: "productivity",
     protocol: "oauth2",
     status: "available",
     created_at: new Date().toISOString(),
@@ -122,7 +133,8 @@ export const APP_LAUNCH_URLS = {
   "slack": "https://slack.com/signin",
   "salesforce": "https://login.salesforce.com",
   "jira": "https://atlassian.net",
-  "confluence": "https://atlassian.net",
+  "trello": "https://trello.com",
+  "notion": "https://notion.so",
   "github": "https://github.com",
   "dropbox": "https://dropbox.com",
 } as const;
@@ -204,8 +216,8 @@ export const LOADING_MESSAGES = {
 
 // Demo Configuration
 export const DEMO_CONFIG = {
-  SIMULATE_OAUTH: true,
-  SHOW_DEMO_ALERTS: true,
+  SIMULATE_OAUTH: false, // Set to false for real OAuth flows
+  SHOW_DEMO_ALERTS: false, // Disable demo alerts
   AUTO_CONNECT_DELAY: 2000,
   LAUNCH_DELAY: 1000,
 } as const;

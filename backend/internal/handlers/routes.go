@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"cloudgate-backend/internal/config"
+	"cloudgate-backend/internal/middleware"
 	"cloudgate-backend/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -59,6 +60,17 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 		userSettingsGroup.POST("/reset", settingsHandlers.ResetUserSettings)
 	}
 
+	// MFA endpoints
+	mfaGroup := router.Group("/user/mfa")
+	{
+		mfaGroup.GET("/status", GetMFAStatusHandler)
+		mfaGroup.POST("/setup", SetupMFAHandler)
+		mfaGroup.POST("/verify-setup", VerifyMFASetupHandler)
+		mfaGroup.POST("/verify", VerifyMFAHandler)
+		mfaGroup.POST("/disable", DisableMFAHandler)
+		mfaGroup.POST("/backup-codes/regenerate", RegenerateBackupCodesHandler)
+	}
+
 	// SaaS Applications endpoints
 	router.GET("/apps", GetAppsHandler)
 	router.POST("/apps/connect", ConnectAppHandler)
@@ -74,16 +86,35 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 
 		// Microsoft OAuth (OAuth 2.0)
 		oauthGroup.GET("/microsoft/connect", MicrosoftOAuthInitHandler)
+		oauthGroup.GET("/microsoft/callback", MicrosoftOAuthCallbackHandler)
 
 		// Slack OAuth (OAuth 2.0)
 		oauthGroup.GET("/slack/connect", SlackOAuthInitHandler)
+		oauthGroup.GET("/slack/callback", SlackOAuthCallbackHandler)
 
 		// GitHub OAuth (OAuth 2.0)
 		oauthGroup.GET("/github/connect", GitHubOAuthInitHandler)
+		oauthGroup.GET("/github/callback", GitHubOAuthCallbackHandler)
 
 		// Trello OAuth (OAuth 1.0a)
 		oauthGroup.GET("/trello/connect", TrelloOAuthInitHandler)
 		oauthGroup.GET("/trello/callback", TrelloOAuthCallbackHandler)
+
+		// Salesforce OAuth (OAuth 2.0)
+		oauthGroup.GET("/salesforce/connect", SalesforceOAuthInitHandler)
+		oauthGroup.GET("/salesforce/callback", SalesforceOAuthCallbackHandler)
+
+		// Jira OAuth (OAuth 2.0)
+		oauthGroup.GET("/jira/connect", JiraOAuthInitHandler)
+		oauthGroup.GET("/jira/callback", JiraOAuthCallbackHandler)
+
+		// Notion OAuth (OAuth 2.0)
+		oauthGroup.GET("/notion/connect", NotionOAuthInitHandler)
+		oauthGroup.GET("/notion/callback", NotionOAuthCallbackHandler)
+
+		// Dropbox OAuth (OAuth 2.0)
+		oauthGroup.GET("/dropbox/connect", DropboxOAuthInitHandler)
+		oauthGroup.GET("/dropbox/callback", DropboxOAuthCallbackHandler)
 	}
 
 	// Admin endpoints (for future use)
@@ -97,8 +128,10 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 	// Dashboard routes
 	dashboardHandlers := NewDashboardHandlers(userService, settingsService)
 	dashboardGroup := router.Group("/dashboard")
+	dashboardGroup.Use(middleware.AuthenticationMiddleware())
 	{
 		dashboardGroup.GET("/data", dashboardHandlers.GetDashboardData)
 		dashboardGroup.GET("/metrics", dashboardHandlers.GetDashboardMetrics)
 	}
+
 }

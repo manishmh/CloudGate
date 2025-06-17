@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -122,7 +123,7 @@ func (h *DashboardHandlers) GetDashboardData(c *gin.Context) {
 			SecurityScore: 95,              // TODO: Calculate based on security factors
 			LastActivity:  "2 minutes ago", // TODO: Get from recent activity
 		},
-		Connections: getDefaultConnections(),
+		Connections: h.getUserConnections(userID.(uuid.UUID).String()),
 		Activity:    getRecentActivity(),
 		Features:    getFeatureCards(),
 	}
@@ -163,6 +164,116 @@ func formatTime(t *time.Time) string {
 		return ""
 	}
 	return t.Format("2006-01-02T15:04:05Z")
+}
+
+// getUserConnections gets real user connections from the database
+func (h *DashboardHandlers) getUserConnections(userID string) []AppConnection {
+	// Get all available apps with user status
+	apps := services.GetAppsWithUserStatus(userID)
+
+	// Get user connections for additional details
+	userConnections := services.GetUserAppConnections(userID)
+
+	var connections []AppConnection
+
+	// Map of app IDs to display info
+	appDisplayInfo := map[string]struct {
+		Name        string
+		Icon        string
+		Description string
+		ConnectURL  string
+	}{
+		"google-workspace": {
+			Name:        "Google Workspace",
+			Icon:        "🔍",
+			Description: "Access Gmail, Drive, Calendar, and more",
+			ConnectURL:  "/oauth/google/connect",
+		},
+		"microsoft-365": {
+			Name:        "Microsoft 365",
+			Icon:        "🏢",
+			Description: "Access Outlook, OneDrive, Teams, and more",
+			ConnectURL:  "/oauth/microsoft/connect",
+		},
+		"slack": {
+			Name:        "Slack",
+			Icon:        "💬",
+			Description: "Access your Slack workspaces",
+			ConnectURL:  "/oauth/slack/connect",
+		},
+		"github": {
+			Name:        "GitHub",
+			Icon:        "🐙",
+			Description: "Access your repositories and organizations",
+			ConnectURL:  "/oauth/github/connect",
+		},
+		"trello": {
+			Name:        "Trello",
+			Icon:        "📋",
+			Description: "Manage your boards and projects",
+			ConnectURL:  "/oauth/trello/connect",
+		},
+	}
+
+	// Build connections list
+	for _, app := range apps {
+		if displayInfo, exists := appDisplayInfo[app.ID]; exists {
+			connection := AppConnection{
+				Name:        displayInfo.Name,
+				Icon:        displayInfo.Icon,
+				Description: displayInfo.Description,
+				ConnectURL:  displayInfo.ConnectURL,
+				Status:      "disconnected", // default
+			}
+
+			// Check if user has this connection
+			if userConn, hasConnection := userConnections[app.ID]; hasConnection {
+				connection.Status = userConn.Status
+				if userConn.ConnectedAt != "" {
+					connection.LastUsed = formatRelativeTime(userConn.ConnectedAt)
+				}
+			}
+
+			connections = append(connections, connection)
+		}
+	}
+
+	return connections
+}
+
+// formatRelativeTime formats a timestamp to relative time (e.g., "2 hours ago")
+func formatRelativeTime(timestamp string) string {
+	// Parse the timestamp
+	t, err := time.Parse(time.RFC3339, timestamp)
+	if err != nil {
+		return "Unknown"
+	}
+
+	// Calculate time difference
+	now := time.Now().UTC()
+	diff := now.Sub(t)
+
+	if diff < time.Minute {
+		return "Just now"
+	} else if diff < time.Hour {
+		minutes := int(diff.Minutes())
+		if minutes == 1 {
+			return "1 minute ago"
+		}
+		return fmt.Sprintf("%d minutes ago", minutes)
+	} else if diff < 24*time.Hour {
+		hours := int(diff.Hours())
+		if hours == 1 {
+			return "1 hour ago"
+		}
+		return fmt.Sprintf("%d hours ago", hours)
+	} else {
+		days := int(diff.Hours() / 24)
+		if days == 1 {
+			return "1 day ago"
+		}
+		return fmt.Sprintf("%d days ago", days)
+	}
 }
 
 func getDefaultConnections() []AppConnection {

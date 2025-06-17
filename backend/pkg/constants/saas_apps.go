@@ -98,19 +98,35 @@ var DefaultSaaSApps = []SaaSAppConfig{
 		},
 	},
 	{
-		ID:          "confluence",
-		Name:        "Confluence",
+		ID:          "trello",
+		Name:        "Trello",
+		Icon:        "📋",
+		Description: "Project management and task organization",
+		Category:    "project-management",
+		Protocol:    "oauth1",
+		Status:      "available",
+		Config: map[string]string{
+			"client_id":     "your-trello-client-id",
+			"client_secret": "your-trello-client-secret",
+			"scope":         "read,write",
+			"auth_url":      "https://trello.com/1/OAuthAuthorizeToken",
+			"token_url":     "https://trello.com/1/OAuthGetAccessToken",
+		},
+	},
+	{
+		ID:          "notion",
+		Name:        "Notion",
 		Icon:        "📝",
-		Description: "Team workspace and knowledge management",
-		Category:    "documentation",
+		Description: "All-in-one workspace for notes and collaboration",
+		Category:    "productivity",
 		Protocol:    "oauth2",
 		Status:      "available",
 		Config: map[string]string{
-			"client_id":     "your-confluence-client-id",
-			"client_secret": "your-confluence-client-secret",
-			"scope":         "read:confluence-user read:confluence-content.all",
-			"auth_url":      "https://auth.atlassian.com/authorize",
-			"token_url":     "https://auth.atlassian.com/oauth/token",
+			"client_id":     "your-notion-client-id",
+			"client_secret": "your-notion-client-secret",
+			"scope":         "read",
+			"auth_url":      "https://api.notion.com/v1/oauth/authorize",
+			"token_url":     "https://api.notion.com/v1/oauth/token",
 		},
 	},
 	{
@@ -154,7 +170,8 @@ var LaunchURLs = map[string]string{
 	"slack":            "https://slack.com/signin",
 	"salesforce":       "https://login.salesforce.com",
 	"jira":             "https://atlassian.net",
-	"confluence":       "https://atlassian.net",
+	"trello":           "https://trello.com",
+	"notion":           "https://notion.so",
 	"github":           "https://github.com",
 	"dropbox":          "https://dropbox.com",
 }
@@ -201,7 +218,7 @@ const (
 
 // Demo configuration
 const (
-	DemoUserID       = "demo-user"
+	DemoUserID       = "12345678-1234-1234-1234-123456789012"
 	DemoAccessToken  = "demo-access-token"
 	DemoRefreshToken = "demo-refresh-token"
 )

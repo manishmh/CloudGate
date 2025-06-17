@@ -88,9 +88,14 @@ func InitializeDatabase() error {
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
-	// Run migrations
-	if err := runMigrations(); err != nil {
-		return fmt.Errorf("failed to run migrations: %w", err)
+	// Only run migrations if explicitly requested via environment variable
+	runMigrationsFlag := getEnv("RUN_MIGRATIONS", "false")
+	if runMigrationsFlag == "true" {
+		if err := runMigrations(); err != nil {
+			return fmt.Errorf("failed to run migrations: %w", err)
+		}
+	} else {
+		log.Println("Skipping database migrations (set RUN_MIGRATIONS=true to enable)")
 	}
 
 	log.Println("Database initialized successfully")
@@ -148,6 +153,9 @@ func runMigrations() error {
 		&models.AuditLog{},
 		&models.EmailVerification{},
 		&models.UserSettings{},
+		&models.MFASetup{},
+		&models.BackupCode{},
+		&models.UserAppConnection{},
 	)
 
 	if err != nil {

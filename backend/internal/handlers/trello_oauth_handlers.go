@@ -14,12 +14,19 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"cloudgate-backend/internal/services"
 	"cloudgate-backend/pkg/constants"
+)
+
+// In-memory store for OAuth 1.0a request token secrets (for demo purposes)
+var (
+	requestTokenSecrets = make(map[string]string)
+	requestTokenMutex   = sync.RWMutex{}
 )
 
 // TrelloOAuthConfig holds Trello OAuth 1.0a configuration
@@ -127,8 +134,10 @@ func TrelloOAuthInitHandler(c *gin.Context) {
 	config := getTrelloOAuthConfig()
 
 	if config.APIKey == "" || config.APISecret == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Trello OAuth not configured",
+		log.Printf("Trello OAuth not configured - missing APIKey or APISecret")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error":   "Trello OAuth not configured",
+			"message": "OAuth credentials not set up for this provider",
 		})
 		return
 	}
@@ -141,7 +150,7 @@ func TrelloOAuthInitHandler(c *gin.Context) {
 	}
 
 	// Step 1: Get request token
-	requestToken, _, err := getTrelloRequestToken(config)
+	requestToken, requestTokenSecret, err := getTrelloRequestToken(config)
 	if err != nil {
 		log.Printf("Error getting Trello request token: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -150,8 +159,10 @@ func TrelloOAuthInitHandler(c *gin.Context) {
 		return
 	}
 
-	// Note: In production, store request token secret in Redis/database for callback validation
-	// For demo purposes, we'll skip this step
+	// Store request token secret for callback (in production, use Redis/database)
+	requestTokenMutex.Lock()
+	requestTokenSecrets[requestToken] = requestTokenSecret
+	requestTokenMutex.Unlock()
 
 	// Build authorization URL
 	authURL := fmt.Sprintf("%s?oauth_token=%s&scope=read,write&expiration=30days&name=CloudGate",
@@ -242,9 +253,25 @@ func TrelloOAuthCallbackHandler(c *gin.Context) {
 	}
 
 	// Step 3: Exchange for access token
-	// Note: In production, you should retrieve the request_token_secret
-	// that was stored during the request token step
-	accessToken, accessTokenSecret, err := getTrelloAccessToken(config, oauthToken, oauthVerifier, "")
+	// Retrieve the stored request token secret
+	requestTokenMutex.RLock()
+	requestTokenSecret, exists := requestTokenSecrets[oauthToken]
+	requestTokenMutex.RUnlock()
+
+	if !exists {
+		log.Printf("Request token secret not found for token: %s", oauthToken)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid OAuth state - request token not found",
+		})
+		return
+	}
+
+	// Clean up the stored secret
+	requestTokenMutex.Lock()
+	delete(requestTokenSecrets, oauthToken)
+	requestTokenMutex.Unlock()
+
+	accessToken, accessTokenSecret, err := getTrelloAccessToken(config, oauthToken, oauthVerifier, requestTokenSecret)
 	if err != nil {
 		log.Printf("Error getting Trello access token: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -276,7 +303,7 @@ func TrelloOAuthCallbackHandler(c *gin.Context) {
 
 	// Redirect to frontend with success
 	frontendURL := getEnv("FRONTEND_URL", "http://localhost:3000")
-	redirectURL := fmt.Sprintf("%s/dashboard?connected=trello&username=%s", frontendURL, url.QueryEscape(userInfo.Username))
+	redirectURL := fmt.Sprintf("%s/oauth/callback?provider=trello&email=%s&code=success", frontendURL, url.QueryEscape(userInfo.Username))
 	c.Redirect(http.StatusFound, redirectURL)
 }
 
