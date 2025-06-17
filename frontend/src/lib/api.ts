@@ -295,6 +295,154 @@ class ApiClient {
       return false;
     }
   }
+
+  // OAuth Monitoring APIs
+  async getConnections(): Promise<{ connections: EnhancedConnection[]; count: number }> {
+    return this.request<{ connections: EnhancedConnection[]; count: number }>('/user/monitoring/connections');
+  }
+
+  async getConnectionStats(): Promise<ConnectionStats> {
+    return this.request<ConnectionStats>('/user/monitoring/connections/stats');
+  }
+
+  async testConnection(connectionId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/user/monitoring/connections/${connectionId}/test`, {
+      method: 'POST',
+    });
+  }
+
+  async recordUsage(connectionId: string, dataTransferred?: number): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/user/monitoring/connections/usage', {
+      method: 'POST',
+      body: JSON.stringify({
+        connection_id: connectionId,
+        data_transferred: dataTransferred || 0,
+      }),
+    });
+  }
+
+  // Security Events APIs
+  async getSecurityEvents(limit?: number): Promise<{ events: SecurityEvent[]; count: number }> {
+    const params = limit ? `?limit=${limit}` : '';
+    return this.request<{ events: SecurityEvent[]; count: number }>(`/user/monitoring/security/events${params}`);
+  }
+
+  async createSecurityEvent(event: CreateSecurityEventRequest): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/user/monitoring/security/events', {
+      method: 'POST',
+      body: JSON.stringify(event),
+    });
+  }
+
+  // Device Management APIs
+  async getTrustedDevices(): Promise<{ devices: TrustedDevice[]; count: number }> {
+    return this.request<{ devices: TrustedDevice[]; count: number }>('/user/monitoring/devices');
+  }
+
+  async registerDevice(device: RegisterDeviceRequest): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/user/monitoring/devices', {
+      method: 'POST',
+      body: JSON.stringify(device),
+    });
+  }
+
+  async trustDevice(deviceId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/user/monitoring/devices/${deviceId}/trust`, {
+      method: 'PUT',
+    });
+  }
+
+  async revokeDevice(deviceId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/user/monitoring/devices/${deviceId}`, {
+      method: 'DELETE',
+    });
+  }
+}
+
+// Additional types for OAuth monitoring
+export interface EnhancedConnection {
+  id: string;
+  user_id: string;
+  app_id: string;
+  app_name: string;
+  provider: string;
+  status: string;
+  user_email?: string;
+  user_name?: string;
+  connected_at: string;
+  last_used?: string;
+  health: ConnectionHealth;
+  usage_count: number;
+  data_transferred: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConnectionHealth {
+  status: string;
+  last_check: string;
+  response_time: number;
+  uptime: number;
+  error_count: number;
+}
+
+export interface ConnectionStats {
+  total_connections: number;
+  active_connections: number;
+  failed_connections: number;
+  average_response_time: number;
+  uptime_percentage: number;
+}
+
+export interface SecurityEvent {
+  id: string;
+  user_id: string;
+  connection_id?: string;
+  event_type: string;
+  description: string;
+  severity: string;
+  ip_address: string;
+  user_agent: string;
+  location?: string;
+  risk_score: number;
+  resolved: boolean;
+  resolved_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSecurityEventRequest {
+  event_type: string;
+  description: string;
+  severity: string;
+  location?: string;
+  risk_score?: number;
+  connection_id?: string;
+}
+
+export interface TrustedDevice {
+  id: string;
+  user_id: string;
+  device_name: string;
+  device_type: string;
+  browser: string;
+  os: string;
+  fingerprint: string;
+  ip_address: string;
+  location?: string;
+  trusted: boolean;
+  last_seen: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RegisterDeviceRequest {
+  device_name: string;
+  device_type: string;
+  browser: string;
+  os: string;
+  fingerprint: string;
+  location?: string;
 }
 
 // Export singleton instance

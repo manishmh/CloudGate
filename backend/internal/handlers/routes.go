@@ -71,6 +71,26 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 		mfaGroup.POST("/backup-codes/regenerate", RegenerateBackupCodesHandler)
 	}
 
+	// OAuth Monitoring endpoints
+	monitoringGroup := router.Group("/user/monitoring")
+	{
+		// Connection monitoring
+		monitoringGroup.GET("/connections", GetConnectionsHandler)
+		monitoringGroup.GET("/connections/stats", GetConnectionStatsHandler)
+		monitoringGroup.POST("/connections/:connectionId/test", TestConnectionHandler)
+		monitoringGroup.POST("/connections/usage", RecordUsageHandler)
+
+		// Security events
+		monitoringGroup.GET("/security/events", GetSecurityEventsHandler)
+		monitoringGroup.POST("/security/events", CreateSecurityEventHandler)
+
+		// Device management
+		monitoringGroup.GET("/devices", GetTrustedDevicesHandler)
+		monitoringGroup.POST("/devices", RegisterDeviceHandler)
+		monitoringGroup.PUT("/devices/:deviceId/trust", TrustDeviceHandler)
+		monitoringGroup.DELETE("/devices/:deviceId", RevokeDeviceHandler)
+	}
+
 	// SaaS Applications endpoints
 	router.GET("/apps", GetAppsHandler)
 	router.POST("/apps/connect", ConnectAppHandler)

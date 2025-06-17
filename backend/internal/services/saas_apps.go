@@ -8,102 +8,131 @@ import (
 	"cloudgate-backend/internal/models"
 	"cloudgate-backend/pkg/constants"
 	"cloudgate-backend/pkg/types"
+
+	"github.com/google/uuid"
 )
 
-// In-memory storage for SaaS apps (these are static configurations)
-var (
-	saasApps = make(map[string]*types.SaaSApplication)
-)
+var saasApps map[string]*types.SaaSApplication
 
-// InitializeSaaSApps sets up the predefined SaaS applications with environment-based configurations
+// InitializeSaaSApps initializes the SaaS applications catalog
 func InitializeSaaSApps() {
-	for _, appConfig := range constants.DefaultSaaSApps {
-		// Create a copy of the config and update with environment variables
-		config := make(map[string]string)
-		for k, v := range appConfig.Config {
-			config[k] = v
-		}
+	saasApps = make(map[string]*types.SaaSApplication)
 
-		// Update config with environment variables based on app ID
-		switch appConfig.ID {
-		case "google-workspace":
-			if clientID := getEnv("GOOGLE_CLIENT_ID", ""); clientID != "" {
-				config["client_id"] = clientID
-			}
-			if clientSecret := getEnv("GOOGLE_CLIENT_SECRET", ""); clientSecret != "" {
-				config["client_secret"] = clientSecret
-			}
-		case "microsoft-365":
-			if clientID := getEnv("MICROSOFT_CLIENT_ID", ""); clientID != "" {
-				config["client_id"] = clientID
-			}
-			if clientSecret := getEnv("MICROSOFT_CLIENT_SECRET", ""); clientSecret != "" {
-				config["client_secret"] = clientSecret
-			}
-		case "slack":
-			if clientID := getEnv("SLACK_CLIENT_ID", ""); clientID != "" {
-				config["client_id"] = clientID
-			}
-			if clientSecret := getEnv("SLACK_CLIENT_SECRET", ""); clientSecret != "" {
-				config["client_secret"] = clientSecret
-			}
-		case "github":
-			if clientID := getEnv("GITHUB_CLIENT_ID", ""); clientID != "" {
-				config["client_id"] = clientID
-			}
-			if clientSecret := getEnv("GITHUB_CLIENT_SECRET", ""); clientSecret != "" {
-				config["client_secret"] = clientSecret
-			}
-		case "salesforce":
-			if clientID := getEnv("SALESFORCE_CLIENT_ID", ""); clientID != "" {
-				config["client_id"] = clientID
-			}
-			if clientSecret := getEnv("SALESFORCE_CLIENT_SECRET", ""); clientSecret != "" {
-				config["client_secret"] = clientSecret
-			}
-		case "jira":
-			if clientID := getEnv("JIRA_CLIENT_ID", ""); clientID != "" {
-				config["client_id"] = clientID
-			}
-			if clientSecret := getEnv("JIRA_CLIENT_SECRET", ""); clientSecret != "" {
-				config["client_secret"] = clientSecret
-			}
-		case "trello":
-			if clientID := getEnv("TRELLO_CLIENT_ID", ""); clientID != "" {
-				config["client_id"] = clientID
-			}
-			if clientSecret := getEnv("TRELLO_CLIENT_SECRET", ""); clientSecret != "" {
-				config["client_secret"] = clientSecret
-			}
-		case "notion":
-			if clientID := getEnv("NOTION_CLIENT_ID", ""); clientID != "" {
-				config["client_id"] = clientID
-			}
-			if clientSecret := getEnv("NOTION_CLIENT_SECRET", ""); clientSecret != "" {
-				config["client_secret"] = clientSecret
-			}
-		case "dropbox":
-			if clientID := getEnv("DROPBOX_CLIENT_ID", ""); clientID != "" {
-				config["client_id"] = clientID
-			}
-			if clientSecret := getEnv("DROPBOX_CLIENT_SECRET", ""); clientSecret != "" {
-				config["client_secret"] = clientSecret
-			}
-		}
+	// Google Workspace
+	saasApps["google-workspace"] = &types.SaaSApplication{
+		ID:          "google-workspace",
+		Name:        "Google Workspace",
+		Icon:        "🔍",
+		Description: "Access Gmail, Drive, Calendar, and more",
+		Category:    "productivity",
+		Protocol:    "oauth2",
+		Status:      "available",
+		CreatedAt:   time.Now().UTC().Format(time.RFC3339),
+		UpdatedAt:   time.Now().UTC().Format(time.RFC3339),
+	}
 
-		app := &types.SaaSApplication{
-			ID:          appConfig.ID,
-			Name:        appConfig.Name,
-			Icon:        appConfig.Icon,
-			Description: appConfig.Description,
-			Category:    appConfig.Category,
-			Protocol:    appConfig.Protocol,
-			Status:      appConfig.Status,
-			Config:      config,
-			CreatedAt:   time.Now().UTC().Format(time.RFC3339),
-			UpdatedAt:   time.Now().UTC().Format(time.RFC3339),
-		}
-		saasApps[app.ID] = app
+	// Microsoft 365
+	saasApps["microsoft-365"] = &types.SaaSApplication{
+		ID:          "microsoft-365",
+		Name:        "Microsoft 365",
+		Icon:        "🏢",
+		Description: "Access Outlook, OneDrive, Teams, and more",
+		Category:    "productivity",
+		Protocol:    "oauth2",
+		Status:      "available",
+		CreatedAt:   time.Now().UTC().Format(time.RFC3339),
+		UpdatedAt:   time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Slack
+	saasApps["slack"] = &types.SaaSApplication{
+		ID:          "slack",
+		Name:        "Slack",
+		Icon:        "💬",
+		Description: "Access your Slack workspaces",
+		Category:    "communication",
+		Protocol:    "oauth2",
+		Status:      "available",
+		CreatedAt:   time.Now().UTC().Format(time.RFC3339),
+		UpdatedAt:   time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// GitHub
+	saasApps["github"] = &types.SaaSApplication{
+		ID:          "github",
+		Name:        "GitHub",
+		Icon:        "🐙",
+		Description: "Access your repositories and organizations",
+		Category:    "development",
+		Protocol:    "oauth2",
+		Status:      "available",
+		CreatedAt:   time.Now().UTC().Format(time.RFC3339),
+		UpdatedAt:   time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Trello
+	saasApps["trello"] = &types.SaaSApplication{
+		ID:          "trello",
+		Name:        "Trello",
+		Icon:        "📋",
+		Description: "Manage your boards and projects",
+		Category:    "productivity",
+		Protocol:    "oauth1",
+		Status:      "available",
+		CreatedAt:   time.Now().UTC().Format(time.RFC3339),
+		UpdatedAt:   time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Salesforce
+	saasApps["salesforce"] = &types.SaaSApplication{
+		ID:          "salesforce",
+		Name:        "Salesforce",
+		Icon:        "☁️",
+		Description: "Access your CRM and sales data",
+		Category:    "crm",
+		Protocol:    "oauth2",
+		Status:      "available",
+		CreatedAt:   time.Now().UTC().Format(time.RFC3339),
+		UpdatedAt:   time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Jira
+	saasApps["jira"] = &types.SaaSApplication{
+		ID:          "jira",
+		Name:        "Jira",
+		Icon:        "🎯",
+		Description: "Manage your projects and issues",
+		Category:    "productivity",
+		Protocol:    "oauth2",
+		Status:      "available",
+		CreatedAt:   time.Now().UTC().Format(time.RFC3339),
+		UpdatedAt:   time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Notion
+	saasApps["notion"] = &types.SaaSApplication{
+		ID:          "notion",
+		Name:        "Notion",
+		Icon:        "📝",
+		Description: "Access your workspace and documents",
+		Category:    "productivity",
+		Protocol:    "oauth2",
+		Status:      "available",
+		CreatedAt:   time.Now().UTC().Format(time.RFC3339),
+		UpdatedAt:   time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Dropbox
+	saasApps["dropbox"] = &types.SaaSApplication{
+		ID:          "dropbox",
+		Name:        "Dropbox",
+		Icon:        "📦",
+		Description: "Access your cloud storage",
+		Category:    "storage",
+		Protocol:    "oauth2",
+		Status:      "available",
+		CreatedAt:   time.Now().UTC().Format(time.RFC3339),
+		UpdatedAt:   time.Now().UTC().Format(time.RFC3339),
 	}
 }
 
@@ -116,9 +145,7 @@ func GetAllSaaSApps() []*types.SaaSApplication {
 	return apps
 }
 
-// Helper functions for database operations
-
-// formatTimePtr formats a time pointer to RFC3339 string or empty string if nil
+// formatTimePtr formats a time pointer to string, returns empty if nil
 func formatTimePtr(t *time.Time) string {
 	if t == nil {
 		return ""
@@ -127,7 +154,7 @@ func formatTimePtr(t *time.Time) string {
 }
 
 // buildMetadata creates a metadata map from database fields for backward compatibility
-func buildMetadata(dbConn *models.UserAppConnection) map[string]string {
+func buildMetadata(dbConn *models.AppConnection) map[string]string {
 	metadata := make(map[string]string)
 
 	if dbConn.UserEmail != "" {
@@ -136,32 +163,11 @@ func buildMetadata(dbConn *models.UserAppConnection) map[string]string {
 	if dbConn.UserName != "" {
 		metadata["user_name"] = dbConn.UserName
 	}
-	if dbConn.Username != "" {
-		metadata["username"] = dbConn.Username
+	if dbConn.Scopes != "" {
+		metadata["scope"] = dbConn.Scopes
 	}
-	if dbConn.TokenType != "" {
-		metadata["token_type"] = dbConn.TokenType
-	}
-	if dbConn.Scope != "" {
-		metadata["scope"] = dbConn.Scope
-	}
-	if dbConn.TeamName != "" {
-		metadata["team_name"] = dbConn.TeamName
-	}
-	if dbConn.AccountID != "" {
-		metadata["account_id"] = dbConn.AccountID
-	}
-	if dbConn.InstanceURL != "" {
-		metadata["instance_url"] = dbConn.InstanceURL
-	}
-	if dbConn.BotID != "" {
-		metadata["bot_id"] = dbConn.BotID
-	}
-	if dbConn.WorkspaceID != "" {
-		metadata["workspace_id"] = dbConn.WorkspaceID
-	}
-	if dbConn.AccessTokenSecret != "" {
-		metadata["access_token_secret"] = dbConn.AccessTokenSecret
+	if dbConn.Provider != "" {
+		metadata["provider"] = dbConn.Provider
 	}
 	if !dbConn.ConnectedAt.IsZero() {
 		metadata["connected_at"] = dbConn.ConnectedAt.Format(time.RFC3339)
@@ -178,21 +184,26 @@ func GetSaaSApp(appID string) (*types.SaaSApplication, bool) {
 
 // GetUserAppConnections returns all app connections for a user
 func GetUserAppConnections(userID string) map[string]*types.UserAppConnection {
-	var dbConnections []models.UserAppConnection
-	DB.Where("user_id = ?", userID).Find(&dbConnections)
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return make(map[string]*types.UserAppConnection)
+	}
+
+	var dbConnections []models.AppConnection
+	DB.Where("user_id = ?", userUUID).Find(&dbConnections)
 
 	connections := make(map[string]*types.UserAppConnection)
 	for _, dbConn := range dbConnections {
 		connections[dbConn.AppID] = &types.UserAppConnection{
-			UserID:       dbConn.UserID,
+			UserID:       dbConn.UserID.String(),
 			AppID:        dbConn.AppID,
 			Status:       dbConn.Status,
 			AccessToken:  dbConn.AccessToken,
 			RefreshToken: dbConn.RefreshToken,
-			ExpiresAt:    formatTimePtr(dbConn.ExpiresAt),
+			ExpiresAt:    formatTimePtr(dbConn.TokenExpiresAt),
 			Metadata:     buildMetadata(&dbConn),
 			ConnectedAt:  dbConn.ConnectedAt.Format(time.RFC3339),
-			LastAccessAt: formatTimePtr(dbConn.LastAccessAt),
+			LastAccessAt: formatTimePtr(dbConn.LastUsed),
 		}
 	}
 	return connections
@@ -200,31 +211,41 @@ func GetUserAppConnections(userID string) map[string]*types.UserAppConnection {
 
 // GetUserAppConnection returns a specific app connection for a user
 func GetUserAppConnection(userID, appID string) (*types.UserAppConnection, bool) {
-	var dbConn models.UserAppConnection
-	result := DB.Where("user_id = ? AND app_id = ?", userID, appID).First(&dbConn)
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, false
+	}
+
+	var dbConn models.AppConnection
+	result := DB.Where("user_id = ? AND app_id = ?", userUUID, appID).First(&dbConn)
 	if result.Error != nil {
 		return nil, false
 	}
 
 	connection := &types.UserAppConnection{
-		UserID:       dbConn.UserID,
+		UserID:       dbConn.UserID.String(),
 		AppID:        dbConn.AppID,
 		Status:       dbConn.Status,
 		AccessToken:  dbConn.AccessToken,
 		RefreshToken: dbConn.RefreshToken,
-		ExpiresAt:    formatTimePtr(dbConn.ExpiresAt),
+		ExpiresAt:    formatTimePtr(dbConn.TokenExpiresAt),
 		Metadata:     buildMetadata(&dbConn),
 		ConnectedAt:  dbConn.ConnectedAt.Format(time.RFC3339),
-		LastAccessAt: formatTimePtr(dbConn.LastAccessAt),
+		LastAccessAt: formatTimePtr(dbConn.LastUsed),
 	}
 	return connection, true
 }
 
 // CreateUserAppConnection creates a new app connection for a user
 func CreateUserAppConnection(userID, appID string) *types.UserAppConnection {
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return nil
+	}
+
 	now := time.Now().UTC()
-	dbConn := models.UserAppConnection{
-		UserID:      userID,
+	dbConn := models.AppConnection{
+		UserID:      userUUID,
 		AppID:       appID,
 		Status:      constants.StatusPending,
 		ConnectedAt: now,
@@ -242,14 +263,19 @@ func CreateUserAppConnection(userID, appID string) *types.UserAppConnection {
 
 // UpdateUserAppConnection updates an existing app connection or creates it if it doesn't exist
 func UpdateUserAppConnection(userID, appID string, updates map[string]interface{}) error {
-	var dbConn models.UserAppConnection
-	result := DB.Where("user_id = ? AND app_id = ?", userID, appID).First(&dbConn)
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	var dbConn models.AppConnection
+	result := DB.Where("user_id = ? AND app_id = ?", userUUID, appID).First(&dbConn)
 
 	if result.Error != nil {
 		// Create new connection if it doesn't exist
 		now := time.Now().UTC()
-		dbConn = models.UserAppConnection{
-			UserID:      userID,
+		dbConn = models.AppConnection{
+			UserID:      userUUID,
 			AppID:       appID,
 			Status:      constants.StatusPending,
 			ConnectedAt: now,
@@ -266,15 +292,12 @@ func UpdateUserAppConnection(userID, appID string, updates map[string]interface{
 	if refreshToken, ok := updates["refresh_token"].(string); ok {
 		dbConn.RefreshToken = refreshToken
 	}
-	if tokenType, ok := updates["token_type"].(string); ok {
-		dbConn.TokenType = tokenType
-	}
-	if scope, ok := updates["scope"].(string); ok {
-		dbConn.Scope = scope
+	if scopes, ok := updates["scope"].(string); ok {
+		dbConn.Scopes = scopes
 	}
 	if expiresAtStr, ok := updates["expires_at"].(string); ok {
 		if expiresAt, err := time.Parse(time.RFC3339, expiresAtStr); err == nil {
-			dbConn.ExpiresAt = &expiresAt
+			dbConn.TokenExpiresAt = &expiresAt
 		}
 	}
 
@@ -285,31 +308,16 @@ func UpdateUserAppConnection(userID, appID string, updates map[string]interface{
 	if userName, ok := updates["user_name"].(string); ok {
 		dbConn.UserName = userName
 	}
-	if username, ok := updates["username"].(string); ok {
-		dbConn.Username = username
+	if provider, ok := updates["provider"].(string); ok {
+		dbConn.Provider = provider
 	}
-	if teamName, ok := updates["team_name"].(string); ok {
-		dbConn.TeamName = teamName
-	}
-	if accountID, ok := updates["account_id"].(string); ok {
-		dbConn.AccountID = accountID
-	}
-	if instanceURL, ok := updates["instance_url"].(string); ok {
-		dbConn.InstanceURL = instanceURL
-	}
-	if botID, ok := updates["bot_id"].(string); ok {
-		dbConn.BotID = botID
-	}
-	if workspaceID, ok := updates["workspace_id"].(string); ok {
-		dbConn.WorkspaceID = workspaceID
-	}
-	if accessTokenSecret, ok := updates["access_token_secret"].(string); ok {
-		dbConn.AccessTokenSecret = accessTokenSecret
+	if appName, ok := updates["app_name"].(string); ok {
+		dbConn.AppName = appName
 	}
 
 	// Update last access time
 	now := time.Now().UTC()
-	dbConn.LastAccessAt = &now
+	dbConn.LastUsed = &now
 
 	// Save to database
 	if result.Error != nil {
@@ -328,23 +336,25 @@ func GenerateState() string {
 	return hex.EncodeToString(bytes)
 }
 
-// GetAppsWithUserStatus returns apps with user connection status
+// GetAppsWithUserStatus returns all apps with their connection status for a user
 func GetAppsWithUserStatus(userID string) []*types.SaaSApplication {
 	apps := GetAllSaaSApps()
-	userConnections := GetUserAppConnections(userID)
+	connections := GetUserAppConnections(userID)
 
-	// Update app status based on user connections
 	for _, app := range apps {
-		if connection, exists := userConnections[app.ID]; exists {
-			if connection.Status == constants.StatusConnected {
-				app.Status = constants.StatusConnected
-			} else {
-				app.Status = constants.StatusPending
-			}
-		} else {
-			app.Status = constants.StatusAvailable
+		if conn, exists := connections[app.ID]; exists {
+			// Update app status based on connection
+			app.Status = conn.Status
 		}
 	}
 
 	return apps
+}
+
+// getFromMetadata safely gets a value from metadata map
+func getFromMetadata(metadata map[string]string, key string) string {
+	if metadata == nil {
+		return ""
+	}
+	return metadata[key]
 }

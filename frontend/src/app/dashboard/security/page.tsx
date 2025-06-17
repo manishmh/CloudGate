@@ -275,7 +275,7 @@ export default function SecurityPage() {
               onChange={(e) =>
                 handleSettingChange("sessionTimeout", parseInt(e.target.value))
               }
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 text-black/80 focus:border-blue-500"
             >
               <option value={15}>15 minutes</option>
               <option value={30}>30 minutes</option>
@@ -299,7 +299,7 @@ export default function SecurityPage() {
               onChange={(e) =>
                 handleSettingChange("passwordExpiry", parseInt(e.target.value))
               }
-              className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-3 py-2 border text-black/80 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value={30}>30 days</option>
               <option value={60}>60 days</option>

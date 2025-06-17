@@ -262,7 +262,7 @@ export default function MFASetup({ onMFAStatusChange }: MFASetupProps) {
               <button
                 onClick={startMFASetup}
                 disabled={loading}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
+                className="w-full max-w-3xs bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
               >
                 {loading ? "Setting up..." : "Enable MFA"}
               </button>
@@ -299,7 +299,7 @@ export default function MFASetup({ onMFAStatusChange }: MFASetupProps) {
               If you can&apos;t scan the QR code, enter this secret manually:
             </p>
             <div className="flex items-center space-x-2">
-              <code className="flex-1 bg-white px-3 py-2 rounded border text-sm font-mono">
+              <code className="flex-1 text-black/70 bg-white px-3 py-2 rounded border text-sm font-mono">
                 {setupData.secret}
               </code>
               <button
@@ -325,12 +325,12 @@ export default function MFASetup({ onMFAStatusChange }: MFASetupProps) {
                 )
               }
               placeholder="123456"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full text-black px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               maxLength={6}
             />
           </div>
 
-          <div className="flex space-x-3">
+          <div className="flex space-x-3 max-w-md">
             <button
               onClick={() => setStep("status")}
               className="flex-1 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"

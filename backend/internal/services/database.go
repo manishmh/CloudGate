@@ -155,7 +155,10 @@ func runMigrations() error {
 		&models.UserSettings{},
 		&models.MFASetup{},
 		&models.BackupCode{},
-		&models.UserAppConnection{},
+		&models.AppConnection{},
+		&models.ConnectionHealthMetrics{},
+		&models.SecurityEvent{},
+		&models.TrustedDevice{},
 	)
 
 	if err != nil {
