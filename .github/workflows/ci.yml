@@ -179,6 +179,59 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
+    - name: Setup Keycloak Realm
+      run: |
+        echo "🔧 Setting up Keycloak realm..."
+        # Wait for Keycloak to be ready
+        sleep 30
+        
+        # Create a minimal realm if it doesn't exist
+        KEYCLOAK_URL="https://cloudgate-keycloak-258151641965.us-central1.run.app"
+        
+        # Get admin token
+        TOKEN=$(curl -s -X POST "${KEYCLOAK_URL}/realms/master/protocol/openid-connect/token" \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          -d "username=admin&password=admin123&grant_type=password&client_id=admin-cli" | \
+          jq -r '.access_token // empty')
+        
+        if [ -n "$TOKEN" ]; then
+          # Check if cloudgate realm exists
+          REALM_EXISTS=$(curl -s -H "Authorization: Bearer $TOKEN" \
+            "${KEYCLOAK_URL}/admin/realms/cloudgate" -w "%{http_code}" -o /dev/null)
+          
+          if [ "$REALM_EXISTS" = "404" ]; then
+            echo "📋 Creating cloudgate realm..."
+            # Create minimal realm
+            curl -s -X POST "${KEYCLOAK_URL}/admin/realms" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $TOKEN" \
+              -d '{
+                "realm": "cloudgate",
+                "enabled": true,
+                "registrationAllowed": true,
+                "loginWithEmailAllowed": true,
+                "duplicateEmailsAllowed": false,
+                "resetPasswordAllowed": true,
+                "editUsernameAllowed": false,
+                "rememberMe": true,
+                "verifyEmail": false,
+                "sslRequired": "external",
+                "clients": [{
+                  "clientId": "cloudgate-frontend",
+                  "enabled": true,
+                  "publicClient": true,
+                  "redirectUris": ["https://cloudgate-frontend-258151641965.us-central1.run.app/*"],
+                  "webOrigins": ["https://cloudgate-frontend-258151641965.us-central1.run.app"]
+                }]
+              }' || echo "⚠️ Realm creation may have failed, but continuing..."
+            echo "✅ Realm setup attempted"
+          else
+            echo "✅ Cloudgate realm already exists"
+          fi
+        else
+          echo "⚠️ Could not get admin token, but continuing deployment..."
+        fi
+
     - name: Build and push frontend image
       working-directory: ./frontend
       run: |
@@ -217,7 +270,7 @@ jobs:
           --max-instances 10 \
           --timeout 300 \
           --concurrency 80 \
-          --set-env-vars="NODE_ENV=production,NEXT_PUBLIC_KEYCLOAK_URL=https://cloudgate-keycloak-6w4eqto47a-uc.a.run.app,NEXT_PUBLIC_KEYCLOAK_REALM=cloudgate,NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=cloudgate-frontend,NEXT_PUBLIC_API_URL=https://cloudgate-backend-6w4eqto47a-uc.a.run.app"
+          --set-env-vars="NODE_ENV=production,NEXT_PUBLIC_KEYCLOAK_URL=https://cloudgate-keycloak-258151641965.us-central1.run.app,NEXT_PUBLIC_KEYCLOAK_REALM=cloudgate,NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=cloudgate-frontend,NEXT_PUBLIC_API_URL=https://cloudgate-backend-258151641965.us-central1.run.app"
 
     - name: Get Frontend URL
       id: frontend-url
@@ -246,4 +299,4 @@ jobs:
       run: |
         echo "🎉 Deployment completed successfully!"
         echo "Frontend URL: ${{ steps.frontend-url.outputs.url }}"
-        echo "Backend URL: https://cloudgate-backend-6w4eqto47a-uc.a.run.app" 
+        echo "Backend URL: https://cloudgate-backend-258151641965.us-central1.run.app" 
