@@ -1,6 +1,8 @@
 "use client";
 
 import DashboardLayout from "@/components/DashboardLayout";
+import MFASetup from "@/components/dashboard/MFASetup";
+import SecurityEnhancements from "@/components/dashboard/SecurityEnhancements";
 import { SECURITY_FEATURES } from "@/constants";
 import { useState } from "react";
 import {
@@ -22,6 +24,7 @@ interface SecurityEvent {
 
 export default function SecurityPage() {
   const [loading, setLoading] = useState(false);
+  const [mfaEnabled, setMfaEnabled] = useState(false);
   const [securityEvents] = useState<SecurityEvent[]>([
     {
       id: "1",
@@ -62,7 +65,6 @@ export default function SecurityPage() {
   ]);
 
   const [securitySettings, setSecuritySettings] = useState({
-    mfaEnabled: true,
     sessionTimeout: 30,
     loginNotifications: true,
     suspiciousActivityAlerts: true,
@@ -140,7 +142,9 @@ export default function SecurityPage() {
               <p className="text-sm font-medium text-gray-600">
                 Security Score
               </p>
-              <p className="text-2xl font-semibold text-green-600">High</p>
+              <p className="text-2xl font-semibold text-green-600">
+                {mfaEnabled ? "High" : "Medium"}
+              </p>
             </div>
           </div>
         </div>
@@ -198,34 +202,18 @@ export default function SecurityPage() {
         </div>
       </div>
 
+      {/* MFA Setup */}
+      <MFASetup onMFAStatusChange={setMfaEnabled} />
+
+      {/* Security Enhancements */}
+      <SecurityEnhancements />
+
       {/* Security Settings */}
       <div className="bg-white rounded-lg shadow p-6 mb-8">
         <h3 className="text-lg font-medium text-gray-900 mb-4">
-          Security Settings
+          Additional Security Settings
         </h3>
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-sm font-medium text-gray-900">
-                Multi-Factor Authentication
-              </h4>
-              <p className="text-sm text-gray-500">
-                Add an extra layer of security to your account
-              </p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={securitySettings.mfaEnabled}
-                onChange={(e) =>
-                  handleSettingChange("mfaEnabled", e.target.checked)
-                }
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-
           <div className="flex items-center justify-between">
             <div>
               <h4 className="text-sm font-medium text-gray-900">
