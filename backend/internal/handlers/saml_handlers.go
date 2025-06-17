@@ -292,6 +292,9 @@ func SAMLACSHandler(c *gin.Context) {
 
 // SAMLMetadataHandler provides SAML metadata for CloudGate as IdP
 func SAMLMetadataHandler(c *gin.Context) {
+	// Get base URL from environment or use default
+	baseURL := getEnv("BACKEND_URL", "http://localhost:8081")
+
 	metadata := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
 <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata"
                      entityID="CloudGate-SSO">
@@ -306,13 +309,13 @@ func SAMLMetadataHandler(c *gin.Context) {
         </md:KeyDescriptor>
         <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</md:NameIDFormat>
         <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
-                               Location="http://localhost:8081/saml/sso"/>
+                               Location="%s/saml/sso"/>
         <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
-                               Location="http://localhost:8081/saml/sso"/>
+                               Location="%s/saml/sso"/>
     </md:IDPSSODescriptor>
-</md:EntityDescriptor>`)
+</md:EntityDescriptor>`, baseURL, baseURL)
 
-	c.Header("Content-Type", "application/xml")
+	c.Header("Content-Type", "application/xml; charset=utf-8")
 	c.String(http.StatusOK, metadata)
 }
 

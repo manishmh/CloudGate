@@ -388,6 +388,12 @@ export const DASHBOARD_NAV_ITEMS = [
     description: "Security status",
   },
   {
+    name: "Advanced Security",
+    href: "/dashboard/advanced-security",
+    icon: "MdOutlineSecurity",
+    description: "Extra security features",
+  },
+  {
     name: "Quick Actions",
     href: "/dashboard/quick-actions",
     icon: "HiLightningBolt",

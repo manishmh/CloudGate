@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -100,6 +101,39 @@ type WebAuthnAuthenticationResponse struct {
 	Token   string `json:"token,omitempty"`
 }
 
+// Define separate structs for JSON serialization with base64 encoding
+type WebAuthnPublicKeyCredentialCreationOptionsJSON struct {
+	Challenge              string                                      `json:"challenge"`
+	RP                     WebAuthnRelyingParty                        `json:"rp"`
+	User                   WebAuthnUserJSON                            `json:"user"`
+	PubKeyCredParams       []WebAuthnPubKeyCredParam                   `json:"pubKeyCredParams"`
+	AuthenticatorSelection WebAuthnAuthenticatorSelection              `json:"authenticatorSelection"`
+	Timeout                int                                         `json:"timeout"`
+	Attestation            string                                      `json:"attestation"`
+	ExcludeCredentials     []WebAuthnPublicKeyCredentialDescriptorJSON `json:"excludeCredentials,omitempty"`
+}
+
+type WebAuthnUserJSON struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	Icon        string `json:"icon,omitempty"`
+}
+
+type WebAuthnPublicKeyCredentialDescriptorJSON struct {
+	Type       string   `json:"type"`
+	ID         string   `json:"id"`
+	Transports []string `json:"transports,omitempty"`
+}
+
+type WebAuthnPublicKeyCredentialRequestOptionsJSON struct {
+	Challenge        string                                      `json:"challenge"`
+	Timeout          int                                         `json:"timeout"`
+	RPID             string                                      `json:"rpId"`
+	AllowCredentials []WebAuthnPublicKeyCredentialDescriptorJSON `json:"allowCredentials"`
+	UserVerification string                                      `json:"userVerification"`
+}
+
 // WebAuthnRegistrationBeginHandler begins WebAuthn registration process
 func WebAuthnRegistrationBeginHandler(c *gin.Context) {
 	userID := getUserIDFromContext(c)
@@ -124,19 +158,16 @@ func WebAuthnRegistrationBeginHandler(c *gin.Context) {
 	// Generate challenge
 	challenge := generateChallenge()
 
-	// Store challenge for verification (in production, use Redis with expiry)
-	// For demo, we'll skip this step
-
-	// Create registration options
-	options := WebAuthnPublicKeyCredentialCreationOptions{
-		Challenge: challenge,
+	// Create registration options for JSON response
+	options := WebAuthnPublicKeyCredentialCreationOptionsJSON{
+		Challenge: base64.URLEncoding.EncodeToString(challenge),
 		RP: WebAuthnRelyingParty{
 			ID:   "localhost",
 			Name: "CloudGate SSO",
 			Icon: "https://cloudgate.example.com/icon.png",
 		},
-		User: WebAuthnUser{
-			ID:          []byte(userID),
+		User: WebAuthnUserJSON{
+			ID:          base64.URLEncoding.EncodeToString([]byte(userID)),
 			Name:        user.Email,
 			DisplayName: fmt.Sprintf("%s %s", user.FirstName, user.LastName),
 			Icon:        user.ProfilePictureURL,
@@ -157,11 +188,11 @@ func WebAuthnRegistrationBeginHandler(c *gin.Context) {
 	// Get existing credentials to exclude
 	existingCreds, err := services.GetUserWebAuthnCredentials(userID)
 	if err == nil && len(existingCreds) > 0 {
-		excludeCredentials := make([]WebAuthnPublicKeyCredentialDescriptor, len(existingCreds))
+		excludeCredentials := make([]WebAuthnPublicKeyCredentialDescriptorJSON, len(existingCreds))
 		for i, cred := range existingCreds {
-			excludeCredentials[i] = WebAuthnPublicKeyCredentialDescriptor{
+			excludeCredentials[i] = WebAuthnPublicKeyCredentialDescriptorJSON{
 				Type:       "public-key",
-				ID:         []byte(cred.CredentialID),
+				ID:         base64.URLEncoding.EncodeToString([]byte(cred.CredentialID)),
 				Transports: []string{"internal", "usb", "nfc", "ble"},
 			}
 		}
@@ -250,17 +281,17 @@ func WebAuthnAuthenticationBeginHandler(c *gin.Context) {
 	}
 
 	// Create authentication options
-	allowCredentials := make([]WebAuthnPublicKeyCredentialDescriptor, len(credentials))
+	allowCredentials := make([]WebAuthnPublicKeyCredentialDescriptorJSON, len(credentials))
 	for i, cred := range credentials {
-		allowCredentials[i] = WebAuthnPublicKeyCredentialDescriptor{
+		allowCredentials[i] = WebAuthnPublicKeyCredentialDescriptorJSON{
 			Type:       "public-key",
-			ID:         []byte(cred.CredentialID),
+			ID:         base64.URLEncoding.EncodeToString([]byte(cred.CredentialID)),
 			Transports: []string{"internal", "usb", "nfc", "ble"},
 		}
 	}
 
-	options := WebAuthnPublicKeyCredentialRequestOptions{
-		Challenge:        challenge,
+	options := WebAuthnPublicKeyCredentialRequestOptionsJSON{
+		Challenge:        base64.URLEncoding.EncodeToString(challenge),
 		Timeout:          60000, // 60 seconds
 		RPID:             "localhost",
 		AllowCredentials: allowCredentials,

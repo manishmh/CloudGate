@@ -83,7 +83,8 @@ export default function AdvancedSecurityPage() {
 
   const loadWebAuthnCredentials = async () => {
     try {
-      const response = await fetch("/api/webauthn/credentials", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
+      const response = await fetch(`${apiUrl}/webauthn/credentials`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       if (response.ok) {
@@ -100,7 +101,8 @@ export default function AdvancedSecurityPage() {
       setLoading(true);
 
       // Perform risk assessment
-      const assessResponse = await fetch("/api/risk/assess", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
+      const assessResponse = await fetch(`${apiUrl}/risk/assess`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -119,7 +121,7 @@ export default function AdvancedSecurityPage() {
         setRiskAssessment(assessment);
 
         // Get policy decision
-        const policyResponse = await fetch("/api/risk/policy", {
+        const policyResponse = await fetch(`${apiUrl}/risk/policy`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
 
@@ -130,7 +132,7 @@ export default function AdvancedSecurityPage() {
       }
 
       // Load risk history
-      const historyResponse = await fetch("/api/risk/history?limit=10", {
+      const historyResponse = await fetch(`${apiUrl}/risk/history?limit=10`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
 
@@ -157,7 +159,8 @@ export default function AdvancedSecurityPage() {
       toast.info("Starting WebAuthn registration...");
 
       // Begin registration
-      const beginResponse = await fetch("/api/webauthn/register/begin", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
+      const beginResponse = await fetch(`${apiUrl}/webauthn/register/begin`, {
         method: "POST",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
@@ -168,11 +171,13 @@ export default function AdvancedSecurityPage() {
 
       const options = await beginResponse.json();
 
-      // Convert challenge from base64
+      // Convert challenge from base64url
       options.challenge = new Uint8Array(
-        Buffer.from(options.challenge, "base64")
+        Buffer.from(options.challenge, "base64url")
       );
-      options.user.id = new Uint8Array(Buffer.from(options.user.id, "base64"));
+      options.user.id = new Uint8Array(
+        Buffer.from(options.user.id, "base64url")
+      );
 
       // Create credential
       const credential = (await navigator.credentials.create({
@@ -184,7 +189,7 @@ export default function AdvancedSecurityPage() {
       }
 
       // Finish registration
-      const finishResponse = await fetch("/api/webauthn/register/finish", {
+      const finishResponse = await fetch(`${apiUrl}/webauthn/register/finish`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -231,10 +236,14 @@ export default function AdvancedSecurityPage() {
       toast.info("Starting WebAuthn authentication...");
 
       // Begin authentication
-      const beginResponse = await fetch("/api/webauthn/authenticate/begin", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
+      const beginResponse = await fetch(
+        `${apiUrl}/webauthn/authenticate/begin`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
 
       if (!beginResponse.ok) {
         throw new Error("Failed to begin WebAuthn authentication");
@@ -244,12 +253,12 @@ export default function AdvancedSecurityPage() {
 
       // Convert challenge and credential IDs
       options.challenge = new Uint8Array(
-        Buffer.from(options.challenge, "base64")
+        Buffer.from(options.challenge, "base64url")
       );
       options.allowCredentials = options.allowCredentials.map(
         (cred: { id: string; type: string; transports?: string[] }) => ({
           ...cred,
-          id: new Uint8Array(Buffer.from(cred.id, "base64")),
+          id: new Uint8Array(Buffer.from(cred.id, "base64url")),
         })
       );
 
@@ -263,48 +272,52 @@ export default function AdvancedSecurityPage() {
       }
 
       // Finish authentication
-      const finishResponse = await fetch("/api/webauthn/authenticate/finish", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          credential: {
-            id: assertion.id,
-            type: assertion.type,
-            response: {
-              authenticatorData: Array.from(
-                new Uint8Array(
-                  (
-                    assertion.response as AuthenticatorAssertionResponse
-                  ).authenticatorData
-                )
-              ),
-              clientDataJSON: Array.from(
-                new Uint8Array(assertion.response.clientDataJSON)
-              ),
-              signature: Array.from(
-                new Uint8Array(
-                  (
-                    assertion.response as AuthenticatorAssertionResponse
-                  ).signature
-                )
-              ),
-              userHandle: (assertion.response as AuthenticatorAssertionResponse)
-                .userHandle
-                ? Array.from(
-                    new Uint8Array(
-                      (
-                        assertion.response as AuthenticatorAssertionResponse
-                      ).userHandle!
-                    )
-                  )
-                : null,
-            },
+      const finishResponse = await fetch(
+        `${apiUrl}/webauthn/authenticate/finish`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }),
-      });
+          body: JSON.stringify({
+            credential: {
+              id: assertion.id,
+              type: assertion.type,
+              response: {
+                authenticatorData: Array.from(
+                  new Uint8Array(
+                    (
+                      assertion.response as AuthenticatorAssertionResponse
+                    ).authenticatorData
+                  )
+                ),
+                clientDataJSON: Array.from(
+                  new Uint8Array(assertion.response.clientDataJSON)
+                ),
+                signature: Array.from(
+                  new Uint8Array(
+                    (
+                      assertion.response as AuthenticatorAssertionResponse
+                    ).signature
+                  )
+                ),
+                userHandle: (
+                  assertion.response as AuthenticatorAssertionResponse
+                ).userHandle
+                  ? Array.from(
+                      new Uint8Array(
+                        (
+                          assertion.response as AuthenticatorAssertionResponse
+                        ).userHandle!
+                      )
+                    )
+                  : null,
+              },
+            },
+          }),
+        }
+      );
 
       if (finishResponse.ok) {
         toast.success("WebAuthn authentication successful!");
@@ -321,8 +334,9 @@ export default function AdvancedSecurityPage() {
 
   const deleteWebAuthnCredential = async (credentialId: string) => {
     try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
       const response = await fetch(
-        `/api/webauthn/credentials/${credentialId}`,
+        `${apiUrl}/webauthn/credentials/${credentialId}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -417,7 +431,7 @@ export default function AdvancedSecurityPage() {
           <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setActiveTab("webauthn")}
-              className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-colors ${
+              className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-colors cursor-pointer ${
                 activeTab === "webauthn"
                   ? "bg-white text-blue-600 shadow-sm"
                   : "text-gray-600 hover:text-gray-900"
@@ -428,7 +442,7 @@ export default function AdvancedSecurityPage() {
             </button>
             <button
               onClick={() => setActiveTab("risk")}
-              className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-colors ${
+              className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-colors cursor-pointer ${
                 activeTab === "risk"
                   ? "bg-white text-blue-600 shadow-sm"
                   : "text-gray-600 hover:text-gray-900"
@@ -439,7 +453,7 @@ export default function AdvancedSecurityPage() {
             </button>
             <button
               onClick={() => setActiveTab("saml")}
-              className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-colors ${
+              className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md transition-colors cursor-pointer ${
                 activeTab === "saml"
                   ? "bg-white text-blue-600 shadow-sm"
                   : "text-gray-600 hover:text-gray-900"
@@ -458,7 +472,7 @@ export default function AdvancedSecurityPage() {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <IoFingerPrint className="text-2xl text-blue-600" />
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-xl font-semibold text-black/80">
                   Biometric Authentication
                 </h2>
               </div>
@@ -472,7 +486,7 @@ export default function AdvancedSecurityPage() {
                 <button
                   onClick={registerWebAuthn}
                   disabled={loading}
-                  className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center space-x-2"
+                  className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center space-x-2 cursor-pointer disabled:cursor-not-allowed"
                 >
                   <IoFingerPrint />
                   <span>
@@ -484,7 +498,7 @@ export default function AdvancedSecurityPage() {
                   <button
                     onClick={authenticateWebAuthn}
                     disabled={loading}
-                    className="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center space-x-2"
+                    className="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center justify-center space-x-2 cursor-pointer disabled:cursor-not-allowed"
                   >
                     <IoCheckmarkCircle />
                     <span>
@@ -496,12 +510,12 @@ export default function AdvancedSecurityPage() {
             </div>
 
             {/* Registered Devices */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-lg shadow-sm p-6 text-black/80">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Registered Devices</h3>
                 <button
                   onClick={loadWebAuthnCredentials}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                  className="p-2 text-gray-700 hover:text-gray-600 rounded-lg hover:bg-gray-100 cursor-pointer"
                 >
                   <IoRefresh />
                 </button>
@@ -543,7 +557,7 @@ export default function AdvancedSecurityPage() {
                         onClick={() =>
                           deleteWebAuthnCredential(credential.credential_id)
                         }
-                        className="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50"
+                        className="text-red-600 hover:text-red-800 p-2 rounded-lg hover:bg-red-50 cursor-pointer"
                       >
                         Delete
                       </button>
@@ -558,16 +572,55 @@ export default function AdvancedSecurityPage() {
         {/* Risk Assessment Tab */}
         {activeTab === "risk" && (
           <div className="space-y-6">
+            {/* Risk Assessment Explanation */}
+            <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+              <div className="flex items-start space-x-3">
+                <IoInformationCircle className="text-2xl text-blue-600 mt-1" />
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                    What is Risk Assessment?
+                  </h3>
+                  <p className="text-blue-800 mb-3">
+                    Our intelligent risk assessment engine continuously analyzes
+                    your login patterns, device fingerprints, location data, and
+                    behavioral characteristics using advanced heuristic
+                    algorithms to detect potential security threats in
+                    real-time.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
+                    <div>
+                      <strong>🎯 Purpose:</strong>
+                      <ul className="list-disc list-inside mt-1 space-y-1">
+                        <li>Detect suspicious login attempts</li>
+                        <li>Identify compromised accounts</li>
+                        <li>Prevent unauthorized access</li>
+                        <li>Adaptive security controls</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <strong>📊 Factors Analyzed:</strong>
+                      <ul className="list-disc list-inside mt-1 space-y-1">
+                        <li>Geographic location changes</li>
+                        <li>Device fingerprinting</li>
+                        <li>Login time patterns</li>
+                        <li>Network characteristics (VPN/Tor)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Current Risk Assessment */}
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-xl font-semibold text-black/80">
                   Current Risk Assessment
                 </h2>
                 <button
                   onClick={loadRiskAssessment}
                   disabled={loading}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
                 >
                   <IoRefresh />
                   <span>{loading ? "Analyzing..." : "Refresh Assessment"}</span>
@@ -698,11 +751,13 @@ export default function AdvancedSecurityPage() {
 
         {/* SAML Tab */}
         {activeTab === "saml" && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-lg shadow-sm p-6 text-black/80">
             <div className="flex items-center space-x-3 mb-6">
               <IoKey className="text-2xl text-blue-600" />
               <div>
-                <h2 className="text-xl font-semibold">SAML 2.0 Integration</h2>
+                <h2 className="text-xl font-semibold text-black/80">
+                  SAML 2.0 Integration
+                </h2>
                 <p className="text-gray-600">
                   Enterprise SSO for legacy applications
                 </p>
@@ -712,7 +767,7 @@ export default function AdvancedSecurityPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* SAML Info */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">
+                <h3 className="text-lg font-semibold mb-4 text-black/80">
                   SAML Configuration
                 </h3>
                 <div className="space-y-4">
@@ -779,10 +834,12 @@ export default function AdvancedSecurityPage() {
 
                 <div className="mt-6">
                   <a
-                    href="/api/saml/metadata"
+                    href={`${
+                      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
+                    }/saml/metadata`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
                   >
                     <IoEye />
                     <span>View Metadata</span>

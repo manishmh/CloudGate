@@ -18,12 +18,14 @@ import {
   HiViewGrid,
   HiX,
 } from "react-icons/hi";
+import { MdOutlineSecurity } from "react-icons/md";
 
 const iconMap = {
   HiHome,
   HiViewGrid,
   HiLink,
   HiShieldCheck,
+  MdOutlineSecurity,
   HiLightningBolt,
 };
 
