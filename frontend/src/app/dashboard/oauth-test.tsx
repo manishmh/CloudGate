@@ -80,12 +80,17 @@ export default function OAuthTest() {
     setMessage(`🔄 Connecting to ${app.name}...`);
 
     try {
-      const response = await fetch(`http://localhost:8081${app.connectUrl}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}${
+          app.connectUrl
+        }`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -113,7 +118,9 @@ export default function OAuthTest() {
     setMessage("🔄 Testing backend connection...");
 
     try {
-      const response = await fetch("http://localhost:8081/health");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/health`
+      );
       if (response.ok) {
         const data = await response.json();
         setMessage(`✅ Backend is healthy: ${data.status}`);
@@ -224,7 +231,10 @@ export default function OAuthTest() {
                         setMessage(`🔍 Testing ${app.name} endpoint...`);
                         try {
                           const response = await fetch(
-                            `http://localhost:8081${app.connectUrl}`
+                            `${
+                              process.env.NEXT_PUBLIC_API_URL ||
+                              "http://localhost:8081"
+                            }${app.connectUrl}`
                           );
                           const data = await response.json();
                           if (response.ok) {
@@ -264,7 +274,8 @@ export default function OAuthTest() {
             </h3>
             <div className="text-sm text-gray-600 space-y-1">
               <p>
-                <strong>Backend URL:</strong> http://localhost:8081
+                <strong>Backend URL:</strong>{" "}
+                {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}
               </p>
               <p>
                 <strong>Frontend URL:</strong> http://localhost:3000

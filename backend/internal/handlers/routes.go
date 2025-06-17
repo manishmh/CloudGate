@@ -25,8 +25,6 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 	router.GET("/health/db", DatabaseHealthCheckHandler)
 
 	// Legal pages
-	router.GET("/privacy-policy", PrivacyPolicyHandler)
-	router.GET("/terms", TermsHandler)
 
 	// Token introspection endpoint
 	router.POST("/token/introspect", TokenIntrospectionHandler(cfg))

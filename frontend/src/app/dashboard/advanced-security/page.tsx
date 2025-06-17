@@ -785,7 +785,9 @@ export default function AdvancedSecurityPage() {
                       SSO URL
                     </label>
                     <div className="p-3 bg-gray-50 rounded-lg font-mono text-sm">
-                      http://localhost:8081/saml/sso
+                      {process.env.NEXT_PUBLIC_API_URL ||
+                        "http://localhost:8081"}
+                      /saml/sso
                     </div>
                   </div>
 
@@ -794,7 +796,9 @@ export default function AdvancedSecurityPage() {
                       Metadata URL
                     </label>
                     <div className="p-3 bg-gray-50 rounded-lg font-mono text-sm">
-                      http://localhost:8081/saml/metadata
+                      {process.env.NEXT_PUBLIC_API_URL ||
+                        "http://localhost:8081"}
+                      /saml/metadata
                     </div>
                   </div>
                 </div>
