@@ -60,7 +60,7 @@ func getGoogleOAuthConfig() *GoogleOAuthConfig {
 	return &GoogleOAuthConfig{
 		ClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
 		ClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
-		RedirectURI:  getEnv("GOOGLE_REDIRECT_URI", "http://localhost:8081/oauth/google/callback"),
+		RedirectURI:  getEnv("GOOGLE_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/google/callback"),
 		Scope:        "openid email profile https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/calendar.readonly",
 	}
 }
@@ -287,7 +287,7 @@ func storeGoogleTokens(userID string, tokenResp *GoogleTokenResponse, userInfo *
 // MicrosoftOAuthInitHandler initiates Microsoft OAuth flow
 func MicrosoftOAuthInitHandler(c *gin.Context) {
 	clientID := getEnv("MICROSOFT_CLIENT_ID", "")
-	redirectURI := getEnv("MICROSOFT_REDIRECT_URI", "http://localhost:8081/oauth/microsoft/callback")
+	redirectURI := getEnv("MICROSOFT_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/microsoft/callback")
 
 	if clientID == "" {
 		log.Printf("Microsoft OAuth not configured - missing ClientID")
@@ -325,7 +325,7 @@ func MicrosoftOAuthInitHandler(c *gin.Context) {
 // SlackOAuthInitHandler initiates Slack OAuth flow
 func SlackOAuthInitHandler(c *gin.Context) {
 	clientID := getEnv("SLACK_CLIENT_ID", "")
-	redirectURI := getEnv("SLACK_REDIRECT_URI", "http://localhost:8081/oauth/slack/callback")
+	redirectURI := getEnv("SLACK_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/slack/callback")
 
 	if clientID == "" {
 		log.Printf("Slack OAuth not configured - missing ClientID")
@@ -363,7 +363,7 @@ func SlackOAuthInitHandler(c *gin.Context) {
 // GitHubOAuthInitHandler initiates GitHub OAuth flow
 func GitHubOAuthInitHandler(c *gin.Context) {
 	clientID := getEnv("GITHUB_CLIENT_ID", "")
-	redirectURI := getEnv("GITHUB_REDIRECT_URI", "http://localhost:8081/oauth/github/callback")
+	redirectURI := getEnv("GITHUB_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/github/callback")
 
 	if clientID == "" {
 		log.Printf("GitHub OAuth not configured - missing ClientID")
@@ -410,7 +410,7 @@ func getEnv(key, fallback string) string {
 func MicrosoftOAuthCallbackHandler(c *gin.Context) {
 	clientID := getEnv("MICROSOFT_CLIENT_ID", "")
 	clientSecret := getEnv("MICROSOFT_CLIENT_SECRET", "")
-	redirectURI := getEnv("MICROSOFT_REDIRECT_URI", "http://localhost:8081/oauth/microsoft/callback")
+	redirectURI := getEnv("MICROSOFT_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/microsoft/callback")
 
 	code := c.Query("code")
 	state := c.Query("state")
@@ -473,7 +473,7 @@ func MicrosoftOAuthCallbackHandler(c *gin.Context) {
 func SlackOAuthCallbackHandler(c *gin.Context) {
 	clientID := getEnv("SLACK_CLIENT_ID", "")
 	clientSecret := getEnv("SLACK_CLIENT_SECRET", "")
-	redirectURI := getEnv("SLACK_REDIRECT_URI", "http://localhost:8081/oauth/slack/callback")
+	redirectURI := getEnv("SLACK_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/slack/callback")
 
 	code := c.Query("code")
 	state := c.Query("state")
@@ -536,7 +536,7 @@ func SlackOAuthCallbackHandler(c *gin.Context) {
 func GitHubOAuthCallbackHandler(c *gin.Context) {
 	clientID := getEnv("GITHUB_CLIENT_ID", "")
 	clientSecret := getEnv("GITHUB_CLIENT_SECRET", "")
-	redirectURI := getEnv("GITHUB_REDIRECT_URI", "http://localhost:8081/oauth/github/callback")
+	redirectURI := getEnv("GITHUB_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/github/callback")
 
 	code := c.Query("code")
 	state := c.Query("state")

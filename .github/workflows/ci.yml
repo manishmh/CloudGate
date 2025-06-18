@@ -232,8 +232,8 @@ jobs:
           echo "⚠️ Could not get admin token, but continuing deployment..."
         fi
 
-    - name: Build and push frontend image
-      working-directory: ./frontend
+    - name: Build and push backend image
+      working-directory: ./backend
       run: |
         # Debug: Check authentication
         echo "🔍 Checking authentication..."
@@ -246,15 +246,38 @@ jobs:
           --location=${{ env.REGION }} \
           --description="CloudGate application images" || echo "Repository already exists or creation failed"
         
-        # List repositories to verify
-        gcloud artifacts repositories list --location=${{ env.REGION }}
+        # Build and push backend image to Artifact Registry
+        echo "🏗️ Building backend image..."
+        docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-backend:latest .
         
+        echo "📤 Pushing backend image..."
+        docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-backend:latest
+
+    - name: Build and push frontend image
+      working-directory: ./frontend
+      run: |
         # Build and push frontend image to Artifact Registry
         echo "🏗️ Building frontend image..."
         docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-frontend:latest .
         
         echo "📤 Pushing frontend image..."
         docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-frontend:latest
+
+    - name: Deploy Backend to Cloud Run
+      run: |
+        gcloud run deploy cloudgate-backend \
+          --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-backend:latest \
+          --platform managed \
+          --region ${{ env.REGION }} \
+          --allow-unauthenticated \
+          --port 8080 \
+          --memory 512Mi \
+          --cpu 1 \
+          --min-instances 0 \
+          --max-instances 10 \
+          --timeout 300 \
+          --concurrency 80 \
+          --set-env-vars="NEXT_PUBLIC_API_URL=https://cloudgate-backend-258151641965.us-central1.run.app,FRONTEND_URL=https://cloudgate-frontend-258151641965.us-central1.run.app,ALLOWED_ORIGINS=https://cloudgate-frontend-258151641965.us-central1.run.app,http://localhost:3000"
 
     - name: Deploy Frontend to Cloud Run
       run: |

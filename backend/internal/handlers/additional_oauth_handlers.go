@@ -20,7 +20,7 @@ import (
 // Salesforce OAuth handlers
 func SalesforceOAuthInitHandler(c *gin.Context) {
 	clientID := getEnv("SALESFORCE_CLIENT_ID", "")
-	redirectURI := getEnv("SALESFORCE_REDIRECT_URI", "http://localhost:8081/oauth/salesforce/callback")
+	redirectURI := getEnv("SALESFORCE_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/salesforce/callback")
 
 	if clientID == "" {
 		log.Printf("Salesforce OAuth not configured - missing ClientID")
@@ -58,7 +58,7 @@ func SalesforceOAuthInitHandler(c *gin.Context) {
 func SalesforceOAuthCallbackHandler(c *gin.Context) {
 	clientID := getEnv("SALESFORCE_CLIENT_ID", "")
 	clientSecret := getEnv("SALESFORCE_CLIENT_SECRET", "")
-	redirectURI := getEnv("SALESFORCE_REDIRECT_URI", "http://localhost:8081/oauth/salesforce/callback")
+	redirectURI := getEnv("SALESFORCE_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/salesforce/callback")
 
 	code := c.Query("code")
 	state := c.Query("state")
@@ -120,7 +120,7 @@ func SalesforceOAuthCallbackHandler(c *gin.Context) {
 // Jira OAuth handlers
 func JiraOAuthInitHandler(c *gin.Context) {
 	clientID := getEnv("JIRA_CLIENT_ID", "")
-	redirectURI := getEnv("JIRA_REDIRECT_URI", "http://localhost:8081/oauth/jira/callback")
+	redirectURI := getEnv("JIRA_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/jira/callback")
 
 	if clientID == "" {
 		log.Printf("Jira OAuth not configured - missing ClientID")
@@ -158,7 +158,7 @@ func JiraOAuthInitHandler(c *gin.Context) {
 func JiraOAuthCallbackHandler(c *gin.Context) {
 	clientID := getEnv("JIRA_CLIENT_ID", "")
 	clientSecret := getEnv("JIRA_CLIENT_SECRET", "")
-	redirectURI := getEnv("JIRA_REDIRECT_URI", "http://localhost:8081/oauth/jira/callback")
+	redirectURI := getEnv("JIRA_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/jira/callback")
 
 	code := c.Query("code")
 	state := c.Query("state")
@@ -220,7 +220,7 @@ func JiraOAuthCallbackHandler(c *gin.Context) {
 // Notion OAuth handlers
 func NotionOAuthInitHandler(c *gin.Context) {
 	clientID := getEnv("NOTION_CLIENT_ID", "")
-	redirectURI := getEnv("NOTION_REDIRECT_URI", "http://localhost:8081/oauth/notion/callback")
+	redirectURI := getEnv("NOTION_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/notion/callback")
 
 	if clientID == "" {
 		log.Printf("Notion OAuth not configured - missing ClientID")
@@ -256,7 +256,7 @@ func NotionOAuthInitHandler(c *gin.Context) {
 func NotionOAuthCallbackHandler(c *gin.Context) {
 	clientID := getEnv("NOTION_CLIENT_ID", "")
 	clientSecret := getEnv("NOTION_CLIENT_SECRET", "")
-	redirectURI := getEnv("NOTION_REDIRECT_URI", "http://localhost:8081/oauth/notion/callback")
+	redirectURI := getEnv("NOTION_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/notion/callback")
 
 	code := c.Query("code")
 	state := c.Query("state")
@@ -318,7 +318,7 @@ func NotionOAuthCallbackHandler(c *gin.Context) {
 // Dropbox OAuth handlers
 func DropboxOAuthInitHandler(c *gin.Context) {
 	clientID := getEnv("DROPBOX_CLIENT_ID", "")
-	redirectURI := getEnv("DROPBOX_REDIRECT_URI", "http://localhost:8081/oauth/dropbox/callback")
+	redirectURI := getEnv("DROPBOX_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/dropbox/callback")
 
 	if clientID == "" {
 		log.Printf("Dropbox OAuth not configured - missing ClientID")
@@ -354,7 +354,7 @@ func DropboxOAuthInitHandler(c *gin.Context) {
 func DropboxOAuthCallbackHandler(c *gin.Context) {
 	clientID := getEnv("DROPBOX_CLIENT_ID", "")
 	clientSecret := getEnv("DROPBOX_CLIENT_SECRET", "")
-	redirectURI := getEnv("DROPBOX_REDIRECT_URI", "http://localhost:8081/oauth/dropbox/callback")
+	redirectURI := getEnv("DROPBOX_REDIRECT_URI", getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")+"/oauth/dropbox/callback")
 
 	code := c.Query("code")
 	state := c.Query("state")
