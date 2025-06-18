@@ -20,6 +20,15 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 	userHandlers := NewUserHandlers(userService, sessionService)
 	settingsHandlers := NewSettingsHandlers(settingsService)
 
+	// Add global OPTIONS handler for CORS preflight
+	router.OPTIONS("/*cors", func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS,PATCH")
+		c.Header("Access-Control-Allow-Headers", "Origin,Content-Type,Accept,Authorization,X-Requested-With")
+		c.Header("Access-Control-Allow-Credentials", "true")
+		c.Status(204)
+	})
+
 	// Health check endpoint
 	router.GET("/health", HealthCheckHandler)
 	router.GET("/health/db", DatabaseHealthCheckHandler)

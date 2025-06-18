@@ -284,7 +284,10 @@ jobs:
         run: |
           # Create environment variables file to avoid escaping issues
           cat > backend-env-vars.yaml << EOF
-          NEXT_PUBLIC_API_URL: "https://cloudgate-backend-258151641965.us-central1.run.app"
+          PORT: "8080"
+          KEYCLOAK_URL: "https://cloudgate-keycloak-258151641965.us-central1.run.app"
+          KEYCLOAK_REALM: "cloudgate"
+          KEYCLOAK_CLIENT_ID: "cloudgate-frontend"
           FRONTEND_URL: "https://cloudgate-frontend-258151641965.us-central1.run.app"
           ALLOWED_ORIGINS: "https://cloudgate-frontend-258151641965.us-central1.run.app,http://localhost:3000"
           EOF
@@ -342,6 +345,10 @@ jobs:
 
           # Create environment variables file to avoid escaping issues
           cat > env-vars.yaml << EOF
+          PORT: "8080"
+          KEYCLOAK_URL: "https://cloudgate-keycloak-258151641965.us-central1.run.app"
+          KEYCLOAK_REALM: "cloudgate"
+          KEYCLOAK_CLIENT_ID: "cloudgate-frontend"
           ALLOWED_ORIGINS: "${FRONTEND_URL},http://localhost:3000"
           FRONTEND_URL: "${FRONTEND_URL}"
           EOF

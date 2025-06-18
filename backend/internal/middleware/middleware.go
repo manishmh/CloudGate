@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -15,9 +16,28 @@ import (
 func SetupCORS(cfg *config.Config) gin.HandlerFunc {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = cfg.AllowedOrigins
-	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
-	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"}
+	corsConfig.AllowHeaders = []string{
+		"Origin",
+		"Content-Type",
+		"Accept",
+		"Authorization",
+		"X-Requested-With",
+		"Access-Control-Allow-Origin",
+		"Access-Control-Allow-Headers",
+		"Access-Control-Allow-Methods",
+		"Access-Control-Allow-Credentials",
+	}
 	corsConfig.AllowCredentials = true
+	corsConfig.ExposeHeaders = []string{"*"}
+
+	// Log CORS configuration for debugging
+	log.Printf("🌐 CORS Configuration:")
+	log.Printf("  📍 Allowed Origins: %v", cfg.AllowedOrigins)
+	log.Printf("  🔧 Allowed Methods: %v", corsConfig.AllowMethods)
+	log.Printf("  📋 Allowed Headers: %v", corsConfig.AllowHeaders)
+	log.Printf("  🔐 Allow Credentials: %v", corsConfig.AllowCredentials)
+
 	return cors.New(corsConfig)
 }
 
