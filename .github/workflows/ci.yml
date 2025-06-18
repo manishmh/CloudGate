@@ -282,16 +282,14 @@ jobs:
 
       - name: Deploy Backend to Cloud Run
         run: |
-          # Create environment variables file to avoid escaping issues
-          cat > backend-env-vars.yaml << EOF
-          PORT: "8080"
-          KEYCLOAK_URL: "https://cloudgate-keycloak-258151641965.us-central1.run.app"
-          KEYCLOAK_REALM: "cloudgate"
-          KEYCLOAK_CLIENT_ID: "cloudgate-frontend"
-          FRONTEND_URL: "https://cloudgate-frontend-258151641965.us-central1.run.app"
-          BACKEND_URL: "https://cloudgate-backend-258151641965.us-central1.run.app"
-          ALLOWED_ORIGINS: "https://cloudgate-frontend-258151641965.us-central1.run.app,http://localhost:3000"
-          EOF
+          # Define environment variables to update, preserving any secret-based variables
+          VARS="PORT=8080,"
+          VARS+="KEYCLOAK_URL=https://cloudgate-keycloak-258151641965.us-central1.run.app,"
+          VARS+="KEYCLOAK_REALM=cloudgate,"
+          VARS+="KEYCLOAK_CLIENT_ID=cloudgate-frontend,"
+          VARS+="FRONTEND_URL=https://cloudgate-frontend-258151641965.us-central1.run.app,"
+          VARS+="BACKEND_URL=https://cloudgate-backend-258151641965.us-central1.run.app,"
+          VARS+="ALLOWED_ORIGINS=https://cloudgate-frontend-258151641965.us-central1.run.app,http://localhost:3000"
 
           gcloud run deploy cloudgate-backend \
             --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-backend:latest \
@@ -305,7 +303,7 @@ jobs:
             --max-instances 10 \
             --timeout 300 \
             --concurrency 80 \
-            --env-vars-file=backend-env-vars.yaml
+            --update-env-vars="$VARS"
 
       - name: Deploy Frontend to Cloud Run
         run: |
@@ -344,21 +342,19 @@ jobs:
           echo "🔧 Updating backend CORS settings..."
           echo "Frontend URL: $FRONTEND_URL"
 
-          # Create environment variables file to avoid escaping issues
-          cat > env-vars.yaml << EOF
-          PORT: "8080"
-          KEYCLOAK_URL: "https://cloudgate-keycloak-258151641965.us-central1.run.app"
-          KEYCLOAK_REALM: "cloudgate"
-          KEYCLOAK_CLIENT_ID: "cloudgate-frontend"
-          ALLOWED_ORIGINS: "${FRONTEND_URL},http://localhost:3000"
-          FRONTEND_URL: "${FRONTEND_URL}"
-          BACKEND_URL: "https://cloudgate-backend-258151641965.us-central1.run.app"
-          EOF
+          # Define environment variables to update, preserving any secret-based variables
+          VARS="PORT=8080,"
+          VARS+="KEYCLOAK_URL=https://cloudgate-keycloak-258151641965.us-central1.run.app,"
+          VARS+="KEYCLOAK_REALM=cloudgate,"
+          VARS+="KEYCLOAK_CLIENT_ID=cloudgate-frontend,"
+          VARS+="ALLOWED_ORIGINS=${FRONTEND_URL},http://localhost:3000,"
+          VARS+="FRONTEND_URL=${FRONTEND_URL},"
+          VARS+="BACKEND_URL=https://cloudgate-backend-258151641965.us-central1.run.app"
 
-          # Update CORS settings using env vars file
+          # Update CORS settings using --update-env-vars
           gcloud run services update cloudgate-backend \
             --region=${{ env.REGION }} \
-            --env-vars-file=env-vars.yaml
+            --update-env-vars="$VARS"
 
       - name: Deployment Summary
         run: |
