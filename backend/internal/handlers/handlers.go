@@ -21,11 +21,15 @@ import (
 
 // HealthCheckHandler handles health check requests
 func HealthCheckHandler(c *gin.Context) {
+	log.Printf("🏥 Health Check Request from %s", c.ClientIP())
+
 	response := types.HealthResponse{
 		Status:    "healthy",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 		Service:   "cloudgate-backend",
 	}
+
+	log.Printf("✅ Health Check Response: %+v", response)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -52,16 +56,23 @@ func APIInfoHandler(c *gin.Context) {
 // TokenIntrospectionHandler handles JWT token introspection requests
 func TokenIntrospectionHandler(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		log.Printf("🔍 Token Introspection Request from %s", c.ClientIP())
+
 		var request types.TokenIntrospectionRequest
 
 		if err := c.ShouldBindJSON(&request); err != nil {
+			log.Printf("❌ Invalid request body for token introspection: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
 		}
 
+		log.Printf("🔑 Token introspection for token length: %d", len(request.Token))
+
 		// Prepare introspection request to Keycloak
 		introspectionURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token/introspect",
 			cfg.KeycloakURL, cfg.KeycloakRealm)
+
+		log.Printf("🌐 Keycloak introspection URL: %s", introspectionURL)
 
 		data := url.Values{}
 		data.Set("token", request.Token)
@@ -106,8 +117,11 @@ func TokenIntrospectionHandler(cfg *config.Config) gin.HandlerFunc {
 // UserInfoHandler handles user information requests
 func UserInfoHandler(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		log.Printf("👤 User Info Request from %s", c.ClientIP())
+
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
+			log.Printf("❌ Missing Authorization header")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
 			return
 		}
@@ -115,15 +129,19 @@ func UserInfoHandler(cfg *config.Config) gin.HandlerFunc {
 		// Extract token from Bearer header
 		tokenParts := strings.Split(authHeader, " ")
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+			log.Printf("❌ Invalid Authorization header format: %s", authHeader)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
 			return
 		}
 
 		token := tokenParts[1]
+		log.Printf("🔑 Extracted token length: %d", len(token))
 
 		// Get user info from Keycloak
 		userInfoURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/userinfo",
 			cfg.KeycloakURL, cfg.KeycloakRealm)
+
+		log.Printf("🌐 Keycloak userinfo URL: %s", userInfoURL)
 
 		req, err := http.NewRequest("GET", userInfoURL, nil)
 		if err != nil {

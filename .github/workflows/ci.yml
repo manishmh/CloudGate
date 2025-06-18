@@ -2,15 +2,15 @@ name: CloudGate CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
-  GO_VERSION: '1.21'
-  NODE_VERSION: '18'
-  PROJECT_ID: 'routemate-409518'
-  REGION: 'us-central1'
+  GO_VERSION: "1.21"
+  NODE_VERSION: "18"
+  PROJECT_ID: "routemate-409518"
+  REGION: "us-central1"
 
 jobs:
   # Frontend CI
@@ -19,41 +19,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
-    - name: Cache node modules
-      uses: actions/cache@v4
-      with:
-        path: frontend/node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-    - name: Install dependencies
-      working-directory: ./frontend
-      run: npm ci
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
 
-    - name: Run ESLint
-      working-directory: ./frontend
-      run: npm run lint
+      - name: Run ESLint
+        working-directory: ./frontend
+        run: npm run lint
 
-    - name: Run type checking
-      working-directory: ./frontend
-      run: npm run typecheck
+      - name: Run type checking
+        working-directory: ./frontend
+        run: npm run typecheck
 
-    - name: Build application
-      working-directory: ./frontend
-      run: npm run build
+      - name: Build application
+        working-directory: ./frontend
+        run: npm run build
 
-    - name: Run tests
-      working-directory: ./frontend
-      run: npm test
+      - name: Run tests
+        working-directory: ./frontend
+        run: npm test
 
   # Backend CI
   backend-ci:
@@ -61,48 +61,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: ${{ env.GO_VERSION }}
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
-    - name: Cache Go modules
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
-    - name: Download dependencies
-      working-directory: ./backend
-      run: go mod download
+      - name: Download dependencies
+        working-directory: ./backend
+        run: go mod download
 
-    - name: Verify dependencies
-      working-directory: ./backend
-      run: go mod verify
+      - name: Verify dependencies
+        working-directory: ./backend
+        run: go mod verify
 
-    - name: Run go vet
-      working-directory: ./backend
-      run: go vet ./...
+      - name: Run go vet
+        working-directory: ./backend
+        run: go vet ./...
 
-    - name: Run go fmt check
-      working-directory: ./backend
-      run: |
-        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
-          echo "Code is not formatted properly:"
-          gofmt -s -l .
-          exit 1
-        fi
+      - name: Run go fmt check
+        working-directory: ./backend
+        run: |
+          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+            echo "Code is not formatted properly:"
+            gofmt -s -l .
+            exit 1
+          fi
 
-    - name: Build binary
-      working-directory: ./backend
-      run: go build -v ./...
+      - name: Build binary
+        working-directory: ./backend
+        run: go build -v ./...
 
   # Security scanning
   security-scan:
@@ -111,15 +111,15 @@ jobs:
     needs: [frontend-ci, backend-ci]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'table'
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "table"
 
   # Docker build (only on main branch)
   docker-build:
@@ -129,27 +129,27 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Build backend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./backend
-        file: ./backend/Dockerfile
-        push: false
-        tags: cloudgate/backend:latest
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: cloudgate/backend:latest
 
-    - name: Build frontend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./frontend
-        file: ./frontend/Dockerfile
-        push: false
-        tags: cloudgate/frontend:latest
+      - name: Build frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: cloudgate/frontend:latest
 
   # Deploy to Production
   deploy-production:
@@ -160,182 +160,199 @@ jobs:
     environment: production
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v2
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
 
-    - name: Configure Docker to use gcloud as a credential helper
-      run: |
-        gcloud auth configure-docker
-        gcloud auth configure-docker us-central1-docker.pkg.dev
+      - name: Configure Docker to use gcloud as a credential helper
+        run: |
+          gcloud auth configure-docker
+          gcloud auth configure-docker us-central1-docker.pkg.dev
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Setup Keycloak Realm
-      run: |
-        echo "🔧 Setting up Keycloak realm..."
-        # Wait for Keycloak to be ready
-        sleep 30
-        
-        # Create a minimal realm if it doesn't exist
-        KEYCLOAK_URL="https://cloudgate-keycloak-258151641965.us-central1.run.app"
-        
-        # Get admin token
-        TOKEN=$(curl -s -X POST "${KEYCLOAK_URL}/realms/master/protocol/openid-connect/token" \
-          -H "Content-Type: application/x-www-form-urlencoded" \
-          -d "username=admin&password=admin123&grant_type=password&client_id=admin-cli" | \
-          jq -r '.access_token // empty')
-        
-        if [ -n "$TOKEN" ]; then
-          # Check if cloudgate realm exists
-          REALM_EXISTS=$(curl -s -H "Authorization: Bearer $TOKEN" \
-            "${KEYCLOAK_URL}/admin/realms/cloudgate" -w "%{http_code}" -o /dev/null)
-          
-          if [ "$REALM_EXISTS" = "404" ]; then
-            echo "📋 Creating cloudgate realm..."
-            # Create minimal realm
-            curl -s -X POST "${KEYCLOAK_URL}/admin/realms" \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer $TOKEN" \
-              -d '{
-                "realm": "cloudgate",
-                "enabled": true,
-                "registrationAllowed": true,
-                "loginWithEmailAllowed": true,
-                "duplicateEmailsAllowed": false,
-                "resetPasswordAllowed": true,
-                "editUsernameAllowed": false,
-                "rememberMe": true,
-                "verifyEmail": false,
-                "sslRequired": "external",
-                "clients": [{
-                  "clientId": "cloudgate-frontend",
+      - name: Setup Keycloak Realm
+        run: |
+          echo "🔧 Setting up Keycloak realm..."
+          # Wait for Keycloak to be ready
+          sleep 30
+
+          # Create a minimal realm if it doesn't exist
+          KEYCLOAK_URL="https://cloudgate-keycloak-258151641965.us-central1.run.app"
+
+          # Get admin token
+          TOKEN=$(curl -s -X POST "${KEYCLOAK_URL}/realms/master/protocol/openid-connect/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "username=admin&password=admin123&grant_type=password&client_id=admin-cli" | \
+            jq -r '.access_token // empty')
+
+          if [ -n "$TOKEN" ]; then
+            # Check if cloudgate realm exists
+            REALM_EXISTS=$(curl -s -H "Authorization: Bearer $TOKEN" \
+              "${KEYCLOAK_URL}/admin/realms/cloudgate" -w "%{http_code}" -o /dev/null)
+            
+            if [ "$REALM_EXISTS" = "404" ]; then
+              echo "📋 Creating cloudgate realm with proper CSP settings..."
+              # Create realm with proper CSP configuration
+              curl -s -X POST "${KEYCLOAK_URL}/admin/realms" \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $TOKEN" \
+                -d '{
+                  "realm": "cloudgate",
                   "enabled": true,
-                  "publicClient": true,
-                  "redirectUris": ["https://cloudgate-frontend-258151641965.us-central1.run.app/*"],
-                  "webOrigins": ["https://cloudgate-frontend-258151641965.us-central1.run.app"]
-                }]
-              }' || echo "⚠️ Realm creation may have failed, but continuing..."
-            echo "✅ Realm setup attempted"
+                  "registrationAllowed": true,
+                  "loginWithEmailAllowed": true,
+                  "duplicateEmailsAllowed": false,
+                  "resetPasswordAllowed": true,
+                  "editUsernameAllowed": false,
+                  "rememberMe": true,
+                  "verifyEmail": false,
+                  "sslRequired": "external",
+                  "browserSecurityHeaders": {
+                    "contentSecurityPolicy": "frame-src '\''self'\'' https://cloudgate-frontend-258151641965.us-central1.run.app; frame-ancestors '\''self'\'' https://cloudgate-frontend-258151641965.us-central1.run.app; object-src '\''none'\'';",
+                    "xFrameOptions": "SAMEORIGIN",
+                    "xContentTypeOptions": "nosniff",
+                    "xXSSProtection": "1; mode=block"
+                  },
+                  "clients": [{
+                    "clientId": "cloudgate-frontend",
+                    "enabled": true,
+                    "publicClient": true,
+                    "standardFlowEnabled": true,
+                    "directAccessGrantsEnabled": true,
+                    "rootUrl": "https://cloudgate-frontend-258151641965.us-central1.run.app",
+                    "baseUrl": "https://cloudgate-frontend-258151641965.us-central1.run.app",
+                    "redirectUris": [
+                      "https://cloudgate-frontend-258151641965.us-central1.run.app/*",
+                      "https://cloudgate-frontend-258151641965.us-central1.run.app/oauth/callback",
+                      "https://cloudgate-frontend-258151641965.us-central1.run.app/dashboard"
+                    ],
+                    "webOrigins": ["https://cloudgate-frontend-258151641965.us-central1.run.app"],
+                    "attributes": {
+                      "pkce.code.challenge.method": "S256"
+                    }
+                  }]
+                }' || echo "⚠️ Realm creation may have failed, but continuing..."
+              echo "✅ Realm setup attempted with CSP configuration"
+            else
+              echo "✅ Cloudgate realm already exists"
+            fi
           else
-            echo "✅ Cloudgate realm already exists"
+            echo "⚠️ Could not get admin token, but continuing deployment..."
           fi
-        else
-          echo "⚠️ Could not get admin token, but continuing deployment..."
-        fi
 
-    - name: Build and push backend image
-      working-directory: ./backend
-      run: |
-        # Debug: Check authentication
-        echo "🔍 Checking authentication..."
-        gcloud auth list
-        
-        # Create Artifact Registry repository if it doesn't exist
-        echo "📦 Creating/checking Artifact Registry repository..."
-        gcloud artifacts repositories create cloudgate-repo \
-          --repository-format=docker \
-          --location=${{ env.REGION }} \
-          --description="CloudGate application images" || echo "Repository already exists or creation failed"
-        
-        # Build and push backend image to Artifact Registry
-        echo "🏗️ Building backend image..."
-        docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-backend:latest .
-        
-        echo "📤 Pushing backend image..."
-        docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-backend:latest
+      - name: Build and push backend image
+        working-directory: ./backend
+        run: |
+          # Debug: Check authentication
+          echo "🔍 Checking authentication..."
+          gcloud auth list
 
-    - name: Build and push frontend image
-      working-directory: ./frontend
-      run: |
-        # Build and push frontend image to Artifact Registry
-        echo "🏗️ Building frontend image..."
-        docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-frontend:latest .
-        
-        echo "📤 Pushing frontend image..."
-        docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-frontend:latest
+          # Create Artifact Registry repository if it doesn't exist
+          echo "📦 Creating/checking Artifact Registry repository..."
+          gcloud artifacts repositories create cloudgate-repo \
+            --repository-format=docker \
+            --location=${{ env.REGION }} \
+            --description="CloudGate application images" || echo "Repository already exists or creation failed"
 
-    - name: Deploy Backend to Cloud Run
-      run: |
-        # Create environment variables file to avoid escaping issues
-        cat > backend-env-vars.yaml << EOF
-        NEXT_PUBLIC_API_URL: "https://cloudgate-backend-258151641965.us-central1.run.app"
-        FRONTEND_URL: "https://cloudgate-frontend-258151641965.us-central1.run.app"
-        ALLOWED_ORIGINS: "https://cloudgate-frontend-258151641965.us-central1.run.app,http://localhost:3000"
-        EOF
-        
-        gcloud run deploy cloudgate-backend \
-          --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-backend:latest \
-          --platform managed \
-          --region ${{ env.REGION }} \
-          --allow-unauthenticated \
-          --port 8080 \
-          --memory 512Mi \
-          --cpu 1 \
-          --min-instances 0 \
-          --max-instances 10 \
-          --timeout 300 \
-          --concurrency 80 \
-          --env-vars-file=backend-env-vars.yaml
+          # Build and push backend image to Artifact Registry
+          echo "🏗️ Building backend image..."
+          docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-backend:latest .
 
-    - name: Deploy Frontend to Cloud Run
-      run: |
-        # Create environment variables file to avoid escaping issues
-        cat > frontend-env-vars.yaml << EOF
-        NODE_ENV: "production"
-        NEXT_PUBLIC_KEYCLOAK_URL: "https://cloudgate-keycloak-258151641965.us-central1.run.app"
-        NEXT_PUBLIC_KEYCLOAK_REALM: "cloudgate"
-        NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: "cloudgate-frontend"
-        NEXT_PUBLIC_API_URL: "https://cloudgate-backend-258151641965.us-central1.run.app"
-        EOF
-        
-        gcloud run deploy cloudgate-frontend \
-          --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-frontend:latest \
-          --platform managed \
-          --region ${{ env.REGION }} \
-          --allow-unauthenticated \
-          --port 3000 \
-          --memory 512Mi \
-          --cpu 1 \
-          --min-instances 0 \
-          --max-instances 10 \
-          --timeout 300 \
-          --concurrency 80 \
-          --env-vars-file=frontend-env-vars.yaml
+          echo "📤 Pushing backend image..."
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-backend:latest
 
-    - name: Get Frontend URL
-      id: frontend-url
-      run: |
-        FRONTEND_URL=$(gcloud run services describe cloudgate-frontend --region=${{ env.REGION }} --format="value(status.url)")
-        echo "url=$FRONTEND_URL" >> $GITHUB_OUTPUT
+      - name: Build and push frontend image
+        working-directory: ./frontend
+        run: |
+          # Build and push frontend image to Artifact Registry
+          echo "🏗️ Building frontend image..."
+          docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-frontend:latest .
 
-    - name: Update Backend CORS
-      run: |
-        FRONTEND_URL="${{ steps.frontend-url.outputs.url }}"
-        echo "🔧 Updating backend CORS settings..."
-        echo "Frontend URL: $FRONTEND_URL"
-        
-        # Create environment variables file to avoid escaping issues
-        cat > env-vars.yaml << EOF
-        ALLOWED_ORIGINS: "${FRONTEND_URL},http://localhost:3000"
-        FRONTEND_URL: "${FRONTEND_URL}"
-        EOF
-        
-        # Update CORS settings using env vars file
-        gcloud run services update cloudgate-backend \
-          --region=${{ env.REGION }} \
-          --env-vars-file=env-vars.yaml
+          echo "📤 Pushing frontend image..."
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-frontend:latest
 
-    - name: Deployment Summary
-      run: |
-        echo "🎉 Deployment completed successfully!"
-        echo "Frontend URL: ${{ steps.frontend-url.outputs.url }}"
-        echo "Backend URL: https://cloudgate-backend-258151641965.us-central1.run.app" 
+      - name: Deploy Backend to Cloud Run
+        run: |
+          # Create environment variables file to avoid escaping issues
+          cat > backend-env-vars.yaml << EOF
+          NEXT_PUBLIC_API_URL: "https://cloudgate-backend-258151641965.us-central1.run.app"
+          FRONTEND_URL: "https://cloudgate-frontend-258151641965.us-central1.run.app"
+          ALLOWED_ORIGINS: "https://cloudgate-frontend-258151641965.us-central1.run.app,http://localhost:3000"
+          EOF
+
+          gcloud run deploy cloudgate-backend \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-backend:latest \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --allow-unauthenticated \
+            --port 8080 \
+            --memory 512Mi \
+            --cpu 1 \
+            --min-instances 0 \
+            --max-instances 10 \
+            --timeout 300 \
+            --concurrency 80 \
+            --env-vars-file=backend-env-vars.yaml
+
+      - name: Deploy Frontend to Cloud Run
+        run: |
+          # Create environment variables file to avoid escaping issues
+          cat > frontend-env-vars.yaml << EOF
+          NODE_ENV: "production"
+          NEXT_PUBLIC_KEYCLOAK_URL: "https://cloudgate-keycloak-258151641965.us-central1.run.app"
+          NEXT_PUBLIC_KEYCLOAK_REALM: "cloudgate"
+          NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: "cloudgate-frontend"
+          NEXT_PUBLIC_API_URL: "https://cloudgate-backend-258151641965.us-central1.run.app"
+          EOF
+
+          gcloud run deploy cloudgate-frontend \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-frontend:latest \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --allow-unauthenticated \
+            --port 3000 \
+            --memory 512Mi \
+            --cpu 1 \
+            --min-instances 0 \
+            --max-instances 10 \
+            --timeout 300 \
+            --concurrency 80 \
+            --env-vars-file=frontend-env-vars.yaml
+
+      - name: Get Frontend URL
+        id: frontend-url
+        run: |
+          FRONTEND_URL=$(gcloud run services describe cloudgate-frontend --region=${{ env.REGION }} --format="value(status.url)")
+          echo "url=$FRONTEND_URL" >> $GITHUB_OUTPUT
+
+      - name: Update Backend CORS
+        run: |
+          FRONTEND_URL="${{ steps.frontend-url.outputs.url }}"
+          echo "🔧 Updating backend CORS settings..."
+          echo "Frontend URL: $FRONTEND_URL"
+
+          # Create environment variables file to avoid escaping issues
+          cat > env-vars.yaml << EOF
+          ALLOWED_ORIGINS: "${FRONTEND_URL},http://localhost:3000"
+          FRONTEND_URL: "${FRONTEND_URL}"
+          EOF
+
+          # Update CORS settings using env vars file
+          gcloud run services update cloudgate-backend \
+            --region=${{ env.REGION }} \
+            --env-vars-file=env-vars.yaml
+
+      - name: Deployment Summary
+        run: |
+          echo "🎉 Deployment completed successfully!"
+          echo "Frontend URL: ${{ steps.frontend-url.outputs.url }}"
+          echo "Backend URL: https://cloudgate-backend-258151641965.us-central1.run.app"

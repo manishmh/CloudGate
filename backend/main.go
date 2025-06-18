@@ -55,7 +55,7 @@ func main() {
 	// Setup middleware
 	router.Use(middleware.SetupCORS(cfg))
 	router.Use(middleware.SecurityHeadersMiddleware())
-	router.Use(handlers.RequestResponseLogger()) // Add detailed logging
+	router.Use(handlers.DetailedRequestLogger()) // Add detailed logging
 
 	// Setup routes
 	handlers.SetupRoutes(router, cfg)
@@ -72,15 +72,24 @@ func main() {
 	}()
 
 	// Log startup information
-	log.Printf("Starting CloudGate Backend on port %s", cfg.Port)
-	log.Printf("Keycloak URL: %s", cfg.KeycloakURL)
-	log.Printf("Keycloak Realm: %s", cfg.KeycloakRealm)
-	log.Printf("Allowed Origins: %v", cfg.AllowedOrigins)
-	log.Printf("Initialized %d SaaS applications", len(services.GetAllSaaSApps()))
-	log.Printf("Database initialized and migrations completed")
+	log.Printf("🚀 ========================================")
+	log.Printf("🚀 CloudGate Backend Starting")
+	log.Printf("🚀 ========================================")
+	log.Printf("📅 Timestamp: %s", time.Now().UTC().Format(time.RFC3339))
+	log.Printf("🌐 Port: %s", cfg.Port)
+	log.Printf("🔐 Keycloak URL: %s", cfg.KeycloakURL)
+	log.Printf("🏰 Keycloak Realm: %s", cfg.KeycloakRealm)
+	log.Printf("🔧 Keycloak Client ID: %s", cfg.KeycloakClientID)
+	log.Printf("🌍 Allowed Origins: %v", cfg.AllowedOrigins)
+	log.Printf("📦 SaaS Applications: %d", len(services.GetAllSaaSApps()))
+	log.Printf("💾 Database: Initialized and migrations completed")
+	log.Printf("🔄 Session cleanup: Running every hour")
+	log.Printf("📝 Logging: Enhanced debugging enabled")
+	log.Printf("🚀 ========================================")
 
 	// Start server
+	log.Printf("🚀 Server starting on port %s...", cfg.Port)
 	if err := router.Run(":" + cfg.Port); err != nil {
-		log.Fatal("Failed to start server:", err)
+		log.Fatal("❌ Failed to start server:", err)
 	}
 }

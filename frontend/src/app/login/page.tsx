@@ -9,15 +9,36 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log("🔍 Login Page State:", {
+      initialized,
+      authenticated: keycloak?.authenticated,
+      keycloakInstance: keycloak ? "present" : "missing",
+      timestamp: new Date().toISOString(),
+    });
+
     if (initialized && keycloak?.authenticated) {
+      console.log("🎯 Redirecting to dashboard - user is authenticated");
       // Use replace instead of push to avoid back button issues
       router.replace("/dashboard");
     }
   }, [initialized, keycloak?.authenticated, router]);
 
   const handleLogin = () => {
+    console.log("🚀 Login button clicked", {
+      keycloak: keycloak ? "present" : "missing",
+      initialized,
+      timestamp: new Date().toISOString(),
+    });
+
     if (keycloak) {
-      keycloak.login();
+      try {
+        console.log("🔐 Calling keycloak.login()...");
+        keycloak.login();
+      } catch (error) {
+        console.error("❌ Keycloak login error:", error);
+      }
+    } else {
+      console.error("❌ Keycloak instance not available for login");
     }
   };
 
