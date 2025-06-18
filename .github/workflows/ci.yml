@@ -289,7 +289,7 @@ jobs:
           VARS+="KEYCLOAK_CLIENT_ID=cloudgate-frontend,"
           VARS+="FRONTEND_URL=https://cloudgate-frontend-258151641965.us-central1.run.app,"
           VARS+="BACKEND_URL=https://cloudgate-backend-258151641965.us-central1.run.app,"
-          VARS+="ALLOWED_ORIGINS=https://cloudgate-frontend-258151641965.us-central1.run.app,http://localhost:3000"
+          VARS+="ALLOWED_ORIGINS=https://cloudgate-frontend-258151641965.us-central1.run.app"
 
           gcloud run deploy cloudgate-backend \
             --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-backend:latest \
@@ -347,7 +347,7 @@ jobs:
           VARS+="KEYCLOAK_URL=https://cloudgate-keycloak-258151641965.us-central1.run.app,"
           VARS+="KEYCLOAK_REALM=cloudgate,"
           VARS+="KEYCLOAK_CLIENT_ID=cloudgate-frontend,"
-          VARS+="ALLOWED_ORIGINS=${FRONTEND_URL},http://localhost:3000,"
+          VARS+="ALLOWED_ORIGINS=${FRONTEND_URL},"
           VARS+="FRONTEND_URL=${FRONTEND_URL},"
           VARS+="BACKEND_URL=https://cloudgate-backend-258151641965.us-central1.run.app"
 
