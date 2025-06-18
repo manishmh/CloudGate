@@ -289,6 +289,7 @@ jobs:
           KEYCLOAK_REALM: "cloudgate"
           KEYCLOAK_CLIENT_ID: "cloudgate-frontend"
           FRONTEND_URL: "https://cloudgate-frontend-258151641965.us-central1.run.app"
+          BACKEND_URL: "https://cloudgate-backend-258151641965.us-central1.run.app"
           ALLOWED_ORIGINS: "https://cloudgate-frontend-258151641965.us-central1.run.app,http://localhost:3000"
           EOF
 
@@ -351,6 +352,7 @@ jobs:
           KEYCLOAK_CLIENT_ID: "cloudgate-frontend"
           ALLOWED_ORIGINS: "${FRONTEND_URL},http://localhost:3000"
           FRONTEND_URL: "${FRONTEND_URL}"
+          BACKEND_URL: "https://cloudgate-backend-258151641965.us-central1.run.app"
           EOF
 
           # Update CORS settings using env vars file
