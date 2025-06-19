@@ -282,15 +282,6 @@ jobs:
 
       - name: Deploy Backend to Cloud Run
         run: |
-          # Define environment variables for the service.
-          # Using --set-env-vars will create the service with these variables. The PORT variable is set automatically by Cloud Run.
-          VARS="KEYCLOAK_URL=https://cloudgate-keycloak-258151641965.us-central1.run.app,"
-          VARS+="KEYCLOAK_REALM=cloudgate,"
-          VARS+="KEYCLOAK_CLIENT_ID=cloudgate-frontend,"
-          VARS+="FRONTEND_URL=https://cloudgate-frontend-258151641965.us-central1.run.app,"
-          VARS+="BACKEND_URL=https://cloudgate-backend-258151641965.us-central1.run.app,"
-          VARS+="ALLOWED_ORIGINS=https://cloudgate-frontend-258151641965.us-central1.run.app"
-
           gcloud run deploy cloudgate-backend \
             --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-backend:latest \
             --platform managed \
@@ -302,20 +293,10 @@ jobs:
             --min-instances 0 \
             --max-instances 10 \
             --timeout 300 \
-            --concurrency 80 \
-            --set-env-vars="$VARS"
+            --concurrency 80
 
       - name: Deploy Frontend to Cloud Run
         run: |
-          # Create environment variables file to avoid escaping issues
-          cat > frontend-env-vars.yaml << EOF
-          NODE_ENV: "production"
-          NEXT_PUBLIC_KEYCLOAK_URL: "https://cloudgate-keycloak-258151641965.us-central1.run.app"
-          NEXT_PUBLIC_KEYCLOAK_REALM: "cloudgate"
-          NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: "cloudgate-frontend"
-          NEXT_PUBLIC_API_URL: "https://cloudgate-backend-258151641965.us-central1.run.app"
-          EOF
-
           gcloud run deploy cloudgate-frontend \
             --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/cloudgate-repo/cloudgate-frontend:latest \
             --platform managed \
@@ -327,8 +308,7 @@ jobs:
             --min-instances 0 \
             --max-instances 10 \
             --timeout 300 \
-            --concurrency 80 \
-            --env-vars-file=frontend-env-vars.yaml
+            --concurrency 80
 
       - name: Get Frontend URL
         id: frontend-url

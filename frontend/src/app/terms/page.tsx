@@ -307,7 +307,7 @@ export default function TermsPage() {
                 Contact Information
               </p>
               <div className="space-y-2">
-                <p>
+              <p>
                   <strong>Service Provider:</strong> Manish Kumar Saw
               </p>
               <p>

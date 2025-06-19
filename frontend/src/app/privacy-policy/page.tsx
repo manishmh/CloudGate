@@ -269,7 +269,7 @@ export default function PrivacyPolicyPage() {
                 Contact Information
               </p>
               <div className="space-y-2">
-                <p>
+              <p>
                   <strong>Data Controller:</strong> Manish Kumar Saw
               </p>
               <p>
