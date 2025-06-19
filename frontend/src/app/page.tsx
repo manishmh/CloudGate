@@ -100,7 +100,7 @@ export default function HomePage() {
             <div className="inline-flex items-center space-x-2 bg-white/60 backdrop-blur-sm border border-gray-200 rounded-full px-4 py-2 mb-8">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span className="text-sm font-medium text-gray-700">
-                Trusted by 10,000+ organizations
+                Trusted by 10,000+ Organizations
               </span>
             </div>
 
