@@ -16,11 +16,16 @@ type Config struct {
 
 // LoadConfig loads configuration from environment variables
 func LoadConfig() *Config {
+	port := getEnv("PORT", "")
+	if port == "" {
+		port = "8081" // Default for local development
+	}
+
 	config := &Config{
 		KeycloakURL:      getEnv("KEYCLOAK_URL", "http://localhost:8080"),
 		KeycloakRealm:    getEnv("KEYCLOAK_REALM", "cloudgate"),
 		KeycloakClientID: getEnv("KEYCLOAK_CLIENT_ID", "cloudgate-frontend"),
-		Port:             getEnv("PORT", "8081"),
+		Port:             port,
 		AllowedOrigins:   strings.Split(getEnv("ALLOWED_ORIGINS", "http://localhost:3000"), ","),
 	}
 	return config
