@@ -282,20 +282,8 @@ jobs:
 
       - name: Deploy Backend to Cloud Run
         run: |
-          # To fix the "Cannot update environment variable" error, we first explicitly remove
-          # any existing environment variables that might be configured as secret references.
-          # We ignore errors in case the variables don't exist on a clean deployment.
-          echo "Clearing potentially conflicting environment variables from previous deployments..."
-          gcloud run services update cloudgate-backend \
-            --region=${{ env.REGION }} \
-            --remove-env-vars="PORT,KEYCLOAK_URL,KEYCLOAK_REALM,KEYCLOAK_CLIENT_ID,FRONTEND_URL,BACKEND_URL,ALLOWED_ORIGINS" \
-            --platform=managed --quiet || echo "Continuing after attempting to remove env vars..."
-
-          # Wait for the update to propagate to avoid race conditions with the subsequent deploy command.
-          echo "Waiting 30 seconds for changes to propagate..."
-          sleep 30
-
-          # Define environment variables to update, preserving any other secret-based variables
+          # Define environment variables for the service.
+          # Using --set-env-vars will create the service with these variables.
           VARS="PORT=8080,"
           VARS+="KEYCLOAK_URL=https://cloudgate-keycloak-258151641965.us-central1.run.app,"
           VARS+="KEYCLOAK_REALM=cloudgate,"
