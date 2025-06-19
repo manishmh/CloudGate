@@ -33,7 +33,7 @@ export default function LoginPage() {
     if (keycloak) {
       try {
         console.log("🔐 Calling keycloak.login()...");
-        keycloak.login();
+      keycloak.login();
       } catch (error) {
         console.error("❌ Keycloak login error:", error);
       }

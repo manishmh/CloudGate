@@ -282,7 +282,16 @@ jobs:
 
       - name: Deploy Backend to Cloud Run
         run: |
-          # Define environment variables to update, preserving any secret-based variables
+          # To fix the "Cannot update environment variable" error, we first explicitly remove
+          # any existing environment variables that might be configured as secret references.
+          # This allows the deploy step to set them as plain text values from the workflow.
+          # We ignore errors in case the variables don't exist on a clean deployment.
+          gcloud run services update cloudgate-backend \
+            --region=${{ env.REGION }} \
+            --remove-env-vars="PORT,KEYCLOAK_URL,KEYCLOAK_REALM,KEYCLOAK_CLIENT_ID,FRONTEND_URL,BACKEND_URL,ALLOWED_ORIGINS" \
+            --platform=managed --quiet || echo "Continuing after attempting to remove env vars..."
+
+          # Define environment variables to update, preserving any other secret-based variables
           VARS="PORT=8080,"
           VARS+="KEYCLOAK_URL=https://cloudgate-keycloak-258151641965.us-central1.run.app,"
           VARS+="KEYCLOAK_REALM=cloudgate,"
@@ -303,7 +312,7 @@ jobs:
             --max-instances 10 \
             --timeout 300 \
             --concurrency 80 \
-            --update-env-vars="$VARS"
+            --set-env-vars="$VARS"
 
       - name: Deploy Frontend to Cloud Run
         run: |
@@ -335,26 +344,6 @@ jobs:
         run: |
           FRONTEND_URL=$(gcloud run services describe cloudgate-frontend --region=${{ env.REGION }} --format="value(status.url)")
           echo "url=$FRONTEND_URL" >> $GITHUB_OUTPUT
-
-      - name: Update Backend CORS
-        run: |
-          FRONTEND_URL="${{ steps.frontend-url.outputs.url }}"
-          echo "🔧 Updating backend CORS settings..."
-          echo "Frontend URL: $FRONTEND_URL"
-
-          # Define environment variables to update, preserving any secret-based variables
-          VARS="PORT=8080,"
-          VARS+="KEYCLOAK_URL=https://cloudgate-keycloak-258151641965.us-central1.run.app,"
-          VARS+="KEYCLOAK_REALM=cloudgate,"
-          VARS+="KEYCLOAK_CLIENT_ID=cloudgate-frontend,"
-          VARS+="ALLOWED_ORIGINS=${FRONTEND_URL},"
-          VARS+="FRONTEND_URL=${FRONTEND_URL},"
-          VARS+="BACKEND_URL=https://cloudgate-backend-258151641965.us-central1.run.app"
-
-          # Update CORS settings using --update-env-vars
-          gcloud run services update cloudgate-backend \
-            --region=${{ env.REGION }} \
-            --update-env-vars="$VARS"
 
       - name: Deployment Summary
         run: |

@@ -309,16 +309,16 @@ export default function TermsPage() {
               <div className="space-y-2">
                 <p>
                   <strong>Service Provider:</strong> Manish Kumar Saw
-                </p>
-                <p>
+              </p>
+              <p>
                   <strong>Email:</strong>
-                  <a
-                    href="mailto:manishmh982@gmail.com"
+                <a
+                  href="mailto:manishmh982@gmail.com"
                     className="text-blue-600 hover:text-blue-800 ml-1"
-                  >
-                    manishmh982@gmail.com
-                  </a>
-                </p>
+                >
+                  manishmh982@gmail.com
+                </a>
+              </p>
                 <p>
                   <strong>Service:</strong> CloudGate SSO Platform
                 </p>
