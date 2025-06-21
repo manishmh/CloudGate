@@ -5,7 +5,8 @@ import {
   type MFASetupResponse,
   type MFAStatusResponse,
 } from "@/lib/api";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
 import {
   IoCopy,
   IoEye,
@@ -31,11 +32,7 @@ export default function MFASetup({ onMFAStatusChange }: MFASetupProps) {
   const [showBackupCodes, setShowBackupCodes] = useState(false);
   const [newBackupCodes, setNewBackupCodes] = useState<string[]>([]);
 
-  useEffect(() => {
-    loadMFAStatus();
-  }, []);
-
-  const loadMFAStatus = async () => {
+  const loadMFAStatus = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -48,7 +45,12 @@ export default function MFASetup({ onMFAStatusChange }: MFASetupProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [onMFAStatusChange]);
+
+  useEffect(() => {
+    loadMFAStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   const startMFASetup = async () => {
     try {
@@ -283,10 +285,12 @@ export default function MFASetup({ onMFAStatusChange }: MFASetupProps) {
             </p>
 
             <div className="inline-block p-4 bg-white border-2 border-gray-200 rounded-lg">
-              <img
+              <Image
                 src={setupData.qr_code_data_url}
                 alt="MFA QR Code"
-                className="w-48 h-48 mx-auto"
+                width={192}
+                height={192}
+                className="mx-auto"
               />
             </div>
           </div>

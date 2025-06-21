@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   HiCog,
+  HiDocumentText,
   HiHome,
   HiLightningBolt,
   HiLink,
@@ -27,6 +28,7 @@ const iconMap = {
   HiShieldCheck,
   MdOutlineSecurity,
   HiLightningBolt,
+  HiDocumentText,
 };
 
 export default function Sidebar() {

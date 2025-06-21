@@ -14,12 +14,18 @@ import (
 
 // SessionService handles session-related operations
 type SessionService struct {
-	db *gorm.DB
+	db                *gorm.DB
+	disableCleanupJob bool
 }
 
 // NewSessionService creates a new session service
 func NewSessionService(db *gorm.DB) *SessionService {
-	return &SessionService{db: db}
+	return &SessionService{db: db, disableCleanupJob: false}
+}
+
+// NewSessionServiceForTesting creates a new session service for testing (disables cleanup job)
+func NewSessionServiceForTesting(db *gorm.DB) *SessionService {
+	return &SessionService{db: db, disableCleanupJob: true}
 }
 
 // CreateSession creates a new session for a user
@@ -46,7 +52,9 @@ func (s *SessionService) CreateSession(userID uuid.UUID, ipAddress, userAgent st
 	}
 
 	// Clean up old sessions for this user (keep only last 5)
-	go s.cleanupOldSessions(userID)
+	if !s.disableCleanupJob {
+		go s.cleanupOldSessions(userID)
+	}
 
 	return &session, nil
 }

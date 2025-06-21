@@ -21,7 +21,7 @@ export default function LoginPage() {
       // Use replace instead of push to avoid back button issues
       router.replace("/dashboard");
     }
-  }, [initialized, keycloak?.authenticated, router]);
+  }, [initialized, keycloak, router]);
 
   const handleLogin = () => {
     console.log("🚀 Login button clicked", {
@@ -33,7 +33,7 @@ export default function LoginPage() {
     if (keycloak) {
       try {
         console.log("🔐 Calling keycloak.login()...");
-      keycloak.login();
+        keycloak.login();
       } catch (error) {
         console.error("❌ Keycloak login error:", error);
       }

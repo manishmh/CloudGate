@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   IoAlert,
   IoLocation,
@@ -49,12 +49,7 @@ export default function SecurityEnhancements() {
   const [loading, setLoading] = useState(false);
   const [currentDevice, setCurrentDevice] = useState<DeviceInfo | null>(null);
 
-  useEffect(() => {
-    loadSecurityData();
-    generateDeviceFingerprint();
-  }, []);
-
-  const loadSecurityData = async () => {
+  const loadSecurityData = useCallback(async () => {
     setLoading(true);
 
     // Simulate loading security data
@@ -146,9 +141,9 @@ export default function SecurityEnhancements() {
 
       setLoading(false);
     }, 1000);
-  };
+  }, []);
 
-  const generateDeviceFingerprint = async () => {
+  const generateDeviceFingerprint = useCallback(async () => {
     try {
       // Basic device fingerprinting
       const canvas = document.createElement("canvas");
@@ -197,14 +192,18 @@ export default function SecurityEnhancements() {
     } catch (error) {
       console.error("Error generating device fingerprint:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadSecurityData();
+    generateDeviceFingerprint();
+  }, [loadSecurityData, generateDeviceFingerprint]);
 
   const getBrowserName = (): string => {
-    const userAgent = navigator.userAgent;
-    if (userAgent.includes("Chrome")) return "Chrome";
-    if (userAgent.includes("Firefox")) return "Firefox";
-    if (userAgent.includes("Safari")) return "Safari";
-    if (userAgent.includes("Edge")) return "Edge";
+    const ua = navigator.userAgent;
+    if (ua.includes("Firefox")) return "Firefox";
+    if (ua.includes("Safari")) return "Safari";
+    if (ua.includes("Edge")) return "Edge";
     return "Unknown Browser";
   };
 

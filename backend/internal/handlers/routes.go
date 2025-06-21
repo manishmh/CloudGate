@@ -15,10 +15,14 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 	userService := services.NewUserService(db)
 	sessionService := services.NewSessionService(db)
 	settingsService := services.NewUserSettingsService(db)
+	adaptiveAuthService := services.NewAdaptiveAuthService(db)
+	securityMonitoringService := services.NewSecurityMonitoringService(db)
 
 	// Initialize handlers
 	userHandlers := NewUserHandlers(userService, sessionService)
 	settingsHandlers := NewSettingsHandlers(settingsService)
+	adaptiveAuthHandlers := NewAdaptiveAuthHandlers(adaptiveAuthService)
+	securityMonitoringHandlers := NewSecurityMonitoringHandlers(securityMonitoringService)
 
 	// Add global OPTIONS handler for CORS preflight
 	router.OPTIONS("/*cors", func(c *gin.Context) {
@@ -193,6 +197,53 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 		riskGroup.GET("/policy", GetPolicyDecisionHandler)
 		riskGroup.GET("/history", GetRiskHistoryHandler)
 		riskGroup.PUT("/thresholds", UpdateRiskThresholdsHandler)
+	}
+
+	// Adaptive Authentication endpoints
+	adaptiveAuthGroup := router.Group("/api/v1/adaptive-auth")
+	adaptiveAuthGroup.Use(middleware.AuthenticationMiddleware())
+	{
+		// Core authentication evaluation
+		adaptiveAuthGroup.POST("/evaluate", adaptiveAuthHandlers.EvaluateAuthentication)
+
+		// Risk assessment history
+		adaptiveAuthGroup.GET("/history/:user_id", adaptiveAuthHandlers.GetRiskAssessmentHistory)
+		adaptiveAuthGroup.GET("/latest/:user_id", adaptiveAuthHandlers.GetLatestRiskAssessment)
+
+		// Risk threshold management
+		adaptiveAuthGroup.PUT("/thresholds", adaptiveAuthHandlers.UpdateRiskThresholds)
+
+		// Device management
+		adaptiveAuthGroup.POST("/register-device", adaptiveAuthHandlers.RegisterDeviceFingerprint)
+		adaptiveAuthGroup.GET("/device-status", adaptiveAuthHandlers.CheckDeviceStatus)
+	}
+
+	// Security Monitoring & Alerting endpoints
+	securityGroup := router.Group("/api/v1/security")
+	securityGroup.Use(middleware.AuthenticationMiddleware())
+	{
+		// Alert management
+		securityGroup.POST("/alerts", securityMonitoringHandlers.GenerateAlert)
+		securityGroup.GET("/alerts", securityMonitoringHandlers.GetAlerts)
+		securityGroup.PUT("/alerts/:alert_id/status", securityMonitoringHandlers.UpdateAlertStatus)
+
+		// Incident management
+		securityGroup.POST("/incidents", securityMonitoringHandlers.CreateIncident)
+		securityGroup.GET("/incidents", securityMonitoringHandlers.GetIncidents)
+
+		// Security metrics and monitoring
+		securityGroup.GET("/metrics", securityMonitoringHandlers.GetSecurityMetrics)
+
+		// Event processing
+		securityGroup.POST("/events/login", securityMonitoringHandlers.ProcessLoginEvent)
+		securityGroup.POST("/events/api", securityMonitoringHandlers.ProcessAPIEvent)
+
+		// Alert channel configuration
+		securityGroup.POST("/channels", securityMonitoringHandlers.ConfigureAlertChannel)
+
+		// Reference data
+		securityGroup.GET("/alert-types", securityMonitoringHandlers.GetAlertTypes)
+		securityGroup.GET("/alert-severities", securityMonitoringHandlers.GetAlertSeverities)
 	}
 
 }

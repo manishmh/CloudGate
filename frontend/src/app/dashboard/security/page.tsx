@@ -5,15 +5,17 @@
 
 import DashboardLayout from "@/components/DashboardLayout";
 import MFASetup from "@/components/dashboard/MFASetup";
+import SecurityAlerts from "@/components/dashboard/SecurityAlerts";
 import SecurityEnhancements from "@/components/dashboard/SecurityEnhancements";
 import { SECURITY_FEATURES } from "@/constants";
 import {
   apiClient,
+  type SecurityAlert,
   type SecurityEvent,
   type TrustedDevice,
   type UserSettings,
 } from "@/lib/api";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   IoCheckmarkCircle,
   IoDesktop,
@@ -147,9 +149,88 @@ export default function SecurityPage() {
   const [securityEvents, setSecurityEvents] = useState<SecurityEvent[]>([]);
   const [trustedDevices, setTrustedDevices] = useState<TrustedDevice[]>([]);
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
+  const [securityAlerts, setSecurityAlerts] = useState<SecurityAlert[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [deviceRegistered, setDeviceRegistered] = useState(false);
   const [hasCreatedLoginEvent, setHasCreatedLoginEvent] = useState(false);
+
+  const registerCurrentDevice = useCallback(async () => {
+    // Check if device was already registered using fingerprint
+    const fingerprint = generateDeviceFingerprint();
+    const storageKey = `device_registered_${fingerprint}`;
+    const deviceAlreadyRegistered = localStorage.getItem(storageKey);
+
+    if (deviceRegistered || deviceAlreadyRegistered) return;
+
+    try {
+      const deviceInfo = getDeviceInfo();
+      const location = await getUserLocation();
+
+      await apiClient.registerDevice({
+        device_name: deviceInfo.deviceName,
+        device_type: deviceInfo.deviceType,
+        browser: deviceInfo.browser,
+        os: deviceInfo.os,
+        fingerprint: fingerprint,
+        location: location,
+      });
+
+      setDeviceRegistered(true);
+      // Store device registration to prevent duplicates
+      localStorage.setItem(storageKey, "true");
+    } catch (error) {
+      console.warn("Failed to register device:", error);
+    }
+  }, [deviceRegistered]);
+
+  const createLoginEvent = useCallback(async () => {
+    // Check if login event was already created in this session
+    const sessionKey = `login_event_${new Date().toDateString()}`;
+    const loginEventCreated = localStorage.getItem(sessionKey);
+
+    if (hasCreatedLoginEvent || loginEventCreated) {
+      console.log("Login event already created today, skipping...");
+      return;
+    }
+
+    try {
+      const location = await getUserLocation();
+
+      await apiClient.createSecurityEvent({
+        event_type: "login",
+        description: "User logged in to CloudGate",
+        severity: "low",
+        location: location,
+        risk_score: 0.1,
+      });
+
+      console.log("Login event created successfully");
+      setHasCreatedLoginEvent(true);
+      // Store in localStorage with today's date to prevent multiple logins per day
+      localStorage.setItem(sessionKey, "true");
+    } catch (error) {
+      console.warn("Failed to create login event:", error);
+    }
+  }, [hasCreatedLoginEvent]);
+
+  const initializeSecurityPage = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Register current device and create login event
+      await registerCurrentDevice();
+      await createLoginEvent();
+
+      // Load security data
+      await loadSecurityData();
+    } catch (err) {
+      console.error("Failed to initialize security page:", err);
+      setError("Failed to initialize security page. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [registerCurrentDevice, createLoginEvent]);
 
   useEffect(() => {
     // Clean up old login events from localStorage (older than 7 days)
@@ -180,102 +261,30 @@ export default function SecurityPage() {
 
     cleanupOldLoginEvents();
     initializeSecurityPage();
-  }, []);
-
-  const initializeSecurityPage = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Register current device and create login event
-      await registerCurrentDevice();
-      await createLoginEvent();
-
-      // Load security data
-      await loadSecurityData();
-    } catch (err) {
-      console.error("Failed to initialize security page:", err);
-      setError("Failed to initialize security page. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const registerCurrentDevice = async () => {
-    // Check if device was already registered using fingerprint
-    const fingerprint = generateDeviceFingerprint();
-    const deviceKey = `device_registered_${fingerprint}`;
-    const deviceAlreadyRegistered = localStorage.getItem(deviceKey);
-
-    if (deviceRegistered || deviceAlreadyRegistered) return;
-
-    try {
-      const deviceInfo = getDeviceInfo();
-      const location = await getUserLocation();
-
-      await apiClient.registerDevice({
-        device_name: deviceInfo.deviceName,
-        device_type: deviceInfo.deviceType,
-        browser: deviceInfo.browser,
-        os: deviceInfo.os,
-        fingerprint: fingerprint,
-        location: location,
-      });
-
-      setDeviceRegistered(true);
-      // Store device registration to prevent duplicates
-      localStorage.setItem(deviceKey, "true");
-    } catch (error) {
-      console.warn("Failed to register device:", error);
-    }
-  };
-
-  const createLoginEvent = async () => {
-    // Check if login event was already created in this session
-    const sessionKey = `login_event_${new Date().toDateString()}`;
-    const loginEventCreated = localStorage.getItem(sessionKey);
-
-    if (hasCreatedLoginEvent || loginEventCreated) {
-      console.log("Login event already created today, skipping...");
-      return;
-    }
-
-    try {
-      const location = await getUserLocation();
-
-      await apiClient.createSecurityEvent({
-        event_type: "login",
-        description: "User logged in to CloudGate",
-        severity: "low",
-        location: location,
-        risk_score: 0.1,
-      });
-
-      console.log("Login event created successfully");
-      setHasCreatedLoginEvent(true);
-      // Store in localStorage with today's date to prevent multiple logins per day
-      localStorage.setItem(sessionKey, "true");
-    } catch (error) {
-      console.warn("Failed to create login event:", error);
-    }
-  };
+  }, [initializeSecurityPage]);
 
   const loadSecurityData = async () => {
     try {
       // Load all security data in parallel
-      const [eventsResponse, devicesResponse, settingsResponse] =
-        await Promise.all([
-          apiClient.getSecurityEvents(10),
-          apiClient.getTrustedDevices(),
-          apiClient.getUserSettings(),
-        ]);
+      const [
+        eventsResponse,
+        devicesResponse,
+        settingsResponse,
+        alertsResponse,
+      ] = await Promise.all([
+        apiClient.getSecurityEvents(10),
+        apiClient.getTrustedDevices(),
+        apiClient.getUserSettings(),
+        apiClient.getSecurityAlerts(),
+      ]);
 
       setSecurityEvents(eventsResponse.events);
       setTrustedDevices(devicesResponse.devices);
       setUserSettings(settingsResponse.settings);
+      setSecurityAlerts(alertsResponse.alerts);
     } catch (err) {
       console.error("Failed to load security data:", err);
-      throw err;
+      setError("Failed to load security data. Please try again.");
     }
   };
 
@@ -380,6 +389,34 @@ export default function SecurityPage() {
       setError("Failed to trust device. Please try again.");
     }
   };
+
+  const handleUpdateAlertStatus = async (
+    alertId: string,
+    status: SecurityAlert["status"]
+  ) => {
+    try {
+      await apiClient.updateSecurityAlertStatus(alertId, status);
+      setSecurityAlerts(
+        securityAlerts.map((alert) =>
+          alert.id === alertId ? { ...alert, status } : alert
+        )
+      );
+
+      toast.success(`Alert ${status} successfully`);
+    } catch (err) {
+      console.error("Failed to update alert status:", err);
+      toast.error("Failed to update alert status");
+    }
+  };
+
+  const handleMFAStatusChange = useCallback(
+    (enabled: boolean) => {
+      if (userSettings) {
+        setUserSettings({ ...userSettings, two_factor_enabled: enabled });
+      }
+    },
+    [userSettings]
+  );
 
   const getEventIcon = (type: string) => {
     switch (type) {
@@ -602,16 +639,20 @@ export default function SecurityPage() {
       </div>
 
       {/* MFA Setup */}
-      <MFASetup
-        onMFAStatusChange={(enabled) => {
-          if (userSettings) {
-            setUserSettings({ ...userSettings, two_factor_enabled: enabled });
-          }
-        }}
-      />
+      <MFASetup onMFAStatusChange={handleMFAStatusChange} />
+
+      {/* Security Alerts Section */}
+      <div className="mb-8">
+        <SecurityAlerts
+          alerts={securityAlerts}
+          onUpdateStatus={handleUpdateAlertStatus}
+        />
+      </div>
 
       {/* Security Enhancements */}
-      <SecurityEnhancements />
+      <div className="mb-8">
+        <SecurityEnhancements />
+      </div>
 
       {/* Trusted Devices */}
       <div className="bg-white rounded-lg shadow p-6 mb-8 mt-6">

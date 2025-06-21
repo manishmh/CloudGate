@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	// Load .env file
+	// Load .env file (optional for Cloud Run)
 	if err := godotenv.Load(); err != nil {
 		log.Printf("Warning: No .env file found or error loading .env file: %v", err)
 		log.Printf("Continuing with system environment variables...")
@@ -26,27 +26,57 @@ func main() {
 	// Load configuration
 	cfg := config.LoadConfig()
 
-	// Initialize database
-	if err := services.InitializeDatabase(); err != nil {
-		log.Fatal("Failed to initialize database:", err)
+	// Validate configuration
+	if err := config.ValidateConfig(cfg); err != nil {
+		log.Fatal("❌ Configuration validation failed:", err)
+	}
+	log.Printf("✅ Configuration validated successfully")
+
+	// Initialize database with retry logic for Cloud Run
+	log.Printf("🔄 Initializing database connection...")
+	maxRetries := 3
+	var dbErr error
+	for i := 0; i < maxRetries; i++ {
+		if dbErr = services.InitializeDatabase(); dbErr != nil {
+			log.Printf("❌ Database initialization attempt %d/%d failed: %v", i+1, maxRetries, dbErr)
+			if i < maxRetries-1 {
+				time.Sleep(time.Duration(i+1) * time.Second)
+			}
+		} else {
+			log.Printf("✅ Database initialized successfully")
+			break
+		}
+	}
+
+	if dbErr != nil {
+		log.Fatal("❌ Failed to initialize database after retries:", dbErr)
 	}
 	defer services.CloseDatabase()
 
 	// Initialize SaaS applications
+	log.Printf("🔄 Initializing SaaS applications...")
 	services.InitializeSaaSApps()
+	log.Printf("✅ SaaS applications initialized")
 
-	// Initialize demo user for development
-	userService := services.NewUserService(services.GetDB())
-	_, err := userService.GetOrCreateDemoUser()
-	if err != nil {
-		log.Printf("Warning: Failed to create demo user: %v", err)
-	} else {
-		log.Printf("Demo user initialized successfully")
+	// Initialize demo user for development (optional for production)
+	if os.Getenv("SKIP_DEMO_USER") != "true" {
+		log.Printf("🔄 Initializing demo user...")
+		userService := services.NewUserService(services.GetDB())
+		_, err := userService.GetOrCreateDemoUser()
+		if err != nil {
+			log.Printf("⚠️ Warning: Failed to create demo user: %v", err)
+		} else {
+			log.Printf("✅ Demo user initialized successfully")
+		}
 	}
 
-	// Set Gin mode
+	// Set Gin mode for production
 	if os.Getenv("GIN_MODE") == "" {
-		gin.SetMode(gin.DebugMode)
+		if os.Getenv("PORT") != "" { // Cloud Run sets PORT
+			gin.SetMode(gin.ReleaseMode)
+		} else {
+			gin.SetMode(gin.DebugMode)
+		}
 	}
 
 	// Create router
@@ -87,9 +117,10 @@ func main() {
 	log.Printf("📝 Logging: Enhanced debugging enabled")
 	log.Printf("🚀 ========================================")
 
-	// Start server
-	log.Printf("🚀 Server starting on port %s...", cfg.Port)
-	if err := router.Run(":" + cfg.Port); err != nil {
+	// Start server - bind to all interfaces for Cloud Run
+	address := "0.0.0.0:" + cfg.Port
+	log.Printf("🚀 Server starting on %s...", address)
+	if err := router.Run(address); err != nil {
 		log.Fatal("❌ Failed to start server:", err)
 	}
 }

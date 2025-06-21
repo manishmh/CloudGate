@@ -399,6 +399,12 @@ export const DASHBOARD_NAV_ITEMS = [
     icon: "HiLightningBolt",
     description: "Common tasks",
   },
+  {
+    name: "Audit Log",
+    href: "/dashboard/audit-log",
+    icon: "HiDocumentText",
+    description: "System activity logs",
+  },
 ] as const;
 
 // Default App Connections

@@ -248,14 +248,13 @@ func (us *UserService) GetOrCreateDemoUser() (*models.User, error) {
 
 	// Create demo user if it doesn't exist
 	demoUser := &models.User{
-		ID:            demoUserUUID,
-		KeycloakID:    "demo-keycloak-id",
-		Email:         "demo@cloudgate.com",
-		Username:      "demo-user",
-		FirstName:     "Demo",
-		LastName:      "User",
-		IsActive:      true,
-		EmailVerified: true,
+		ID:         demoUserUUID,
+		KeycloakID: "demo-user-keycloak-id",
+		Email:      "demo@cloudgate.dev",
+		Username:   "demouser",
+		FirstName:  "Demo",
+		LastName:   "User",
+		IsActive:   true,
 	}
 
 	if err := us.db.Create(demoUser).Error; err != nil {

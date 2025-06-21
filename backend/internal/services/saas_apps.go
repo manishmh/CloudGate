@@ -346,6 +346,7 @@ func GetAppsWithUserStatus(userID string) []*types.SaaSApplication {
 			// Update app status based on connection
 			app.Status = conn.Status
 		}
+
 	}
 
 	return apps

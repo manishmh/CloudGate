@@ -91,14 +91,23 @@ func InitializeDatabase() error {
 	// Only run migrations if explicitly requested via environment variable
 	runMigrationsFlag := getEnv("RUN_MIGRATIONS", "false")
 	if runMigrationsFlag == "true" {
+		log.Println("🔄 Running database migrations...")
 		if err := runMigrations(); err != nil {
-			return fmt.Errorf("failed to run migrations: %w", err)
+			log.Printf("❌ Failed to run migrations: %v", err)
+			// Don't fail startup for migration errors in production
+			if os.Getenv("PORT") != "" { // Cloud Run environment
+				log.Printf("⚠️ Continuing startup without migrations in Cloud Run environment")
+			} else {
+				return fmt.Errorf("failed to run migrations: %w", err)
+			}
+		} else {
+			log.Printf("✅ Database migrations completed successfully")
 		}
 	} else {
-		log.Println("Skipping database migrations (set RUN_MIGRATIONS=true to enable)")
+		log.Println("ℹ️ Skipping database migrations (set RUN_MIGRATIONS=true to enable)")
 	}
 
-	log.Println("Database initialized successfully")
+	log.Println("✅ Database initialized successfully")
 	return nil
 }
 

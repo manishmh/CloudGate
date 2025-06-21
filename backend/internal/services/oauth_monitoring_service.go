@@ -116,18 +116,26 @@ func (s *OAuthMonitoringService) GetConnectionStats(userID string) (*ConnectionS
 	stats.FailedConnections = int(failedCount)
 
 	// Calculate average response time for active connections
-	var avgResponseTime float64
+	var avgResponseTime *float64
 	if err := s.db.Model(&models.AppConnection{}).Where("user_id = ? AND status = ?", userUUID, "connected").Select("AVG(response_time)").Scan(&avgResponseTime).Error; err != nil {
 		return nil, fmt.Errorf("failed to calculate average response time: %w", err)
 	}
-	stats.AverageResponseTime = int(avgResponseTime)
+	if avgResponseTime != nil {
+		stats.AverageResponseTime = int(*avgResponseTime)
+	} else {
+		stats.AverageResponseTime = 0
+	}
 
 	// Calculate average uptime percentage
-	var avgUptime float64
+	var avgUptime *float64
 	if err := s.db.Model(&models.AppConnection{}).Where("user_id = ? AND status = ?", userUUID, "connected").Select("AVG(uptime_percent)").Scan(&avgUptime).Error; err != nil {
 		return nil, fmt.Errorf("failed to calculate average uptime: %w", err)
 	}
-	stats.UptimePercentage = avgUptime
+	if avgUptime != nil {
+		stats.UptimePercentage = *avgUptime
+	} else {
+		stats.UptimePercentage = 0.0
+	}
 
 	return &stats, nil
 }

@@ -378,8 +378,139 @@ class ApiClient {
   }
 
   async resetUserSettings(): Promise<UserSettings> {
-    return this.request<UserSettings>('/user/settings/reset', {
+    return this.request<UserSettings>('/user/settings/reset', { method: 'POST' });
+  }
+
+  // Security Monitoring API methods
+  async getSecurityAlerts(): Promise<{ alerts: SecurityAlert[] }> {
+    return this.request<{ alerts: SecurityAlert[] }>('/api/v1/security/alerts');
+  }
+
+  async updateSecurityAlertStatus(alertId: string, status: SecurityAlert['status']): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/api/v1/security/alerts/${alertId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
+
+  // Adaptive Authentication API methods
+  async evaluateAuthentication(data: {
+    device_fingerprint: string;
+    typing_pattern?: {
+      avg_keydown_time?: number;
+      key_intervals?: number[];
+    };
+    mouse_pattern?: {
+      click_intervals?: number[];
+      movement_speed?: number;
+    };
+  }): Promise<AdaptiveAuthResponse> {
+    // Get current user info and IP address
+    const userAgent = navigator.userAgent;
+    const ipAddress = '127.0.0.1'; // In production, this would be detected server-side
+    
+    // For demo purposes, use demo user data
+    const requestData = {
+      user_id: '12345678-1234-1234-1234-123456789012', // Valid UUID for demo user
+      email: 'demo@cloudgate.com', // This should come from Keycloak token in production
+      ip_address: ipAddress,
+      user_agent: userAgent,
+      device_fingerprint: data.device_fingerprint,
+      location: {
+        country: 'US',
+        region: 'California',
+        city: 'San Francisco',
+        latitude: 37.7749,
+        longitude: -122.4194,
+        isp: 'Demo ISP',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        vpn_detected: false
+      },
+      session_info: {
+        typing_pattern: data.typing_pattern,
+        mouse_pattern: data.mouse_pattern
+      },
+      request_headers: {
+        'User-Agent': userAgent,
+        'Accept-Language': navigator.language
+      },
+      application_id: 'cloudgate-dashboard'
+    };
+
+    return this.request<AdaptiveAuthResponse>('/api/v1/adaptive-auth/evaluate', {
       method: 'POST',
+      body: JSON.stringify(requestData),
+    });
+  }
+
+  async getRiskAssessmentHistory(userId: string, limit?: number): Promise<{ assessments: RiskAssessment[] }> {
+    const params = limit ? `?limit=${limit}` : '';
+    return this.request<{ assessments: RiskAssessment[] }>(`/api/v1/adaptive-auth/history/${userId}${params}`);
+  }
+
+  async getLatestRiskAssessment(userId: string): Promise<RiskAssessment> {
+    return this.request<RiskAssessment>(`/api/v1/adaptive-auth/latest/${userId}`);
+  }
+
+  async updateRiskThresholds(thresholds: RiskThresholds): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/v1/adaptive-auth/thresholds', {
+      method: 'PUT',
+      body: JSON.stringify(thresholds),
+    });
+  }
+
+  async registerDeviceFingerprint(fingerprint: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/api/v1/adaptive-auth/register-device', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        user_id: '12345678-1234-1234-1234-123456789012', // Valid UUID for demo user
+        fingerprint: fingerprint,
+        device_name: 'Browser',
+        device_type: 'web',
+        browser: navigator.userAgent,
+        os: navigator.platform
+      }),
+    });
+  }
+
+  async checkDeviceStatus(fingerprint: string): Promise<{ status: string; trusted: boolean }> {
+    return this.request<{ status: string; trusted: boolean }>(`/api/v1/adaptive-auth/device-status?fingerprint=${fingerprint}`);
+  }
+
+  // WebAuthn API methods
+  async webAuthnRegisterBegin(): Promise<unknown> {
+    return this.request<unknown>('/webauthn/register/begin', {
+      method: 'POST',
+    });
+  }
+
+  async webAuthnRegisterFinish(credential: unknown): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>('/webauthn/register/finish', {
+      method: 'POST',
+      body: JSON.stringify({ credential }),
+    });
+  }
+
+  async webAuthnAuthenticateBegin(): Promise<unknown> {
+    return this.request<unknown>('/webauthn/authenticate/begin', {
+      method: 'POST',
+    });
+  }
+
+  async webAuthnAuthenticateFinish(credential: unknown): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>('/webauthn/authenticate/finish', {
+      method: 'POST',
+      body: JSON.stringify({ credential }),
+    });
+  }
+
+  async getWebAuthnCredentials(): Promise<{ credentials: unknown[] }> {
+    return this.request<{ credentials: unknown[] }>('/webauthn/credentials');
+  }
+
+  async deleteWebAuthnCredential(credentialId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/webauthn/credentials/${credentialId}`, {
+      method: 'DELETE',
     });
   }
 }
@@ -401,6 +532,17 @@ export interface EnhancedConnection {
   data_transferred: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface SecurityAlert {
+  id: string;
+  user_id: string;
+  type: string;
+  severity: "low" | "medium" | "high" | "critical";
+  description: string;
+  status: "new" | "acknowledged" | "resolved";
+  source: string;
+  created_at: string;
 }
 
 export interface ConnectionHealth {
@@ -489,6 +631,77 @@ export interface UserSettings {
   suspicious_activity_alerts: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface RiskAssessment {
+  user_id: string;
+  risk_score: number;
+  risk_level: "low" | "medium" | "high" | "critical";
+  risk_factors: RiskFactor[];
+  location: {
+    country: string;
+    city: string;
+    is_vpn: boolean;
+    is_tor: boolean;
+  };
+  device: {
+    fingerprint: string;
+    is_known: boolean;
+    trust_score: number;
+  };
+  behavior: {
+    typing_speed_deviation: number;
+    mouse_pattern_deviation: number;
+  };
+  timestamp: string;
+}
+
+export interface RiskFactor {
+  type: string;
+  description: string;
+  weight: number;
+  score: number;
+}
+
+export interface AdaptiveAuthResponse {
+  decision: "allow" | "challenge" | "deny" | "monitor";
+  risk_score: number;
+  risk_level: "low" | "medium" | "high" | "critical";
+  required_actions: AuthAction[];
+  reasoning: string[];
+  session_duration_seconds: number;
+  restrictions: AuthRestriction[];
+  metadata: Record<string, unknown>;
+  expires_at: string;
+  // Legacy compatibility - map to new format
+  risk_assessment?: RiskAssessment;
+  session_restrictions?: {
+    max_duration_minutes: number;
+    require_mfa: boolean;
+    allowed_operations: string[];
+  };
+}
+
+export interface AuthAction {
+  type: string;
+  required: boolean;
+  timeout_seconds: number;
+  metadata: Record<string, unknown>;
+  description: string;
+}
+
+export interface AuthRestriction {
+  type: string;
+  value: unknown;
+  description: string;
+  expires_at?: string;
+}
+
+export interface RiskThresholds {
+  low_threshold: number;
+  medium_threshold: number;
+  high_threshold: number;
+  critical_threshold: number;
 }
 
 // Export singleton instance
