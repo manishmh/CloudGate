@@ -356,17 +356,19 @@ export default function ApplicationsPage() {
   };
 
   // Filter apps based on search term and category
-  const filteredApps = apps.filter((app) => {
-    const matchesSearch =
-      app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "all" || app.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  }).sort((a, b) => {
-    // Sort by name to maintain consistent order
-    return a.name.localeCompare(b.name);
-  });
+  const filteredApps = apps
+    .filter((app) => {
+      const matchesSearch =
+        app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "all" || app.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => {
+      // Sort by name to maintain consistent order
+      return a.name.localeCompare(b.name);
+    });
 
   // Get unique categories
   const categories = [
@@ -374,23 +376,8 @@ export default function ApplicationsPage() {
     ...Array.from(new Set(apps.map((app) => app.category))),
   ];
 
-  const refreshAction = (
-    <button
-      onClick={handleRefresh}
-      disabled={loading}
-      className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-    >
-      <IoRefresh className="h-4 w-4 mr-2" />
-      {loading ? "Refreshing..." : "Refresh"}
-    </button>
-  );
-
   return (
-    <DashboardLayout
-      title="Applications"
-      description="Manage your SaaS applications and connections"
-      actions={refreshAction}
-    >
+    <DashboardLayout>
       {/* Backend Status Indicator */}
       {!backendAvailable && (
         <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-md p-4">

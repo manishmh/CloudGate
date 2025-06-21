@@ -206,11 +206,7 @@ export default function QuickActionsPage() {
   );
 
   return (
-    <DashboardLayout
-      title="Quick Actions"
-      description="Common tasks and shortcuts for your account"
-      actions={refreshAction}
-    >
+    <DashboardLayout>
       {/* Categories Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {categories.map((category) => {

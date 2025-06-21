@@ -276,11 +276,7 @@ function ProfileContent() {
   );
 
   return (
-    <DashboardLayout
-      title="Profile Settings"
-      description="Manage your account information and preferences"
-      actions={saveAction}
-    >
+    <DashboardLayout>
       {/* Message Display */}
       {message && (
         <div
@@ -440,10 +436,7 @@ export default function ProfilePage() {
   return (
     <Suspense
       fallback={
-        <DashboardLayout
-          title="Profile Settings"
-          description="Manage your account information and preferences"
-        >
+        <DashboardLayout>
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>

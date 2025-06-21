@@ -16,9 +16,7 @@ import {
   FALLBACK_SAAS_APPS,
 } from "@/constants";
 import { apiClient } from "@/lib/api";
-import { useKeycloak } from "@react-keycloak/web";
 import { useCallback, useEffect, useState } from "react";
-import { HiRefresh } from "react-icons/hi";
 
 interface AppConnection {
   name: string;
@@ -47,7 +45,6 @@ interface DashboardMetricsType {
 }
 
 export default function Dashboard() {
-  const { keycloak } = useKeycloak();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [connections, setConnections] = useState<AppConnection[]>([
@@ -144,39 +141,8 @@ export default function Dashboard() {
     updateMetrics();
   }, [updateMetrics]);
 
-  const handleRefresh = () => {
-    loadApps();
-  };
-
-  const getUserDisplayName = () => {
-    if (keycloak?.tokenParsed) {
-      return (
-        keycloak.tokenParsed.preferred_username ||
-        keycloak.tokenParsed.name ||
-        keycloak.tokenParsed.email ||
-        "User"
-      );
-    }
-    return "User";
-  };
-
-  const refreshAction = (
-    <button
-      onClick={handleRefresh}
-      disabled={loading}
-      className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
-    >
-      <HiRefresh className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-      Refresh
-    </button>
-  );
-
   return (
-    <DashboardLayout
-      title={`Welcome back, ${getUserDisplayName()}`}
-      description="Your secure single sign-on dashboard"
-      actions={refreshAction}
-    >
+    <DashboardLayout>
       {/* Error Message */}
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
@@ -184,6 +150,9 @@ export default function Dashboard() {
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">Error</h3>
               <p className="text-sm text-red-700 mt-1">{error}</p>
+              {loading && (
+                <p className="text-sm text-red-600 mt-1">Loading...</p>
+              )}
             </div>
             <button
               onClick={() => setError(null)}

@@ -156,10 +156,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <DashboardLayout
-        title="Settings"
-        description="Customize your CloudGate experience"
-      >
+      <DashboardLayout>
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
@@ -168,11 +165,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <DashboardLayout
-      title="Settings"
-      description="Customize your CloudGate experience"
-      actions={saveAction}
-    >
+    <DashboardLayout>
       {/* Error Message */}
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">

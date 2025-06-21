@@ -185,11 +185,7 @@ export default function AuditLogPage() {
   );
 
   return (
-    <DashboardLayout
-      title="Audit Log"
-      description="View comprehensive system and user activity logs"
-      actions={refreshAction}
-    >
+    <DashboardLayout>
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex items-center mb-4">

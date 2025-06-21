@@ -512,10 +512,7 @@ export default function SecurityPage() {
 
   if (loading && !userSettings) {
     return (
-      <DashboardLayout
-        title="Security Center"
-        description="Monitor and manage your security settings"
-      >
+      <DashboardLayout>
         <div className="space-y-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="bg-white rounded-lg shadow p-6">
@@ -532,10 +529,7 @@ export default function SecurityPage() {
 
   if (error) {
     return (
-      <DashboardLayout
-        title="Security Center"
-        description="Monitor and manage your security settings"
-      >
+      <DashboardLayout>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <div className="flex items-center">
             <IoWarning className="h-6 w-6 text-red-500 mr-3" />
@@ -558,11 +552,7 @@ export default function SecurityPage() {
   }
 
   return (
-    <DashboardLayout
-      title="Security Center"
-      description="Monitor and manage your security settings"
-      actions={refreshAction}
-    >
+    <DashboardLayout>
       {/* Security Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6">

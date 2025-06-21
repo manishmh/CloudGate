@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setSidebarOpen, toggleSidebar } from "@/store/slices/sidebarSlice";
+import { setSidebarOpen } from "@/store/slices/sidebarSlice";
 import { useKeycloak } from "@react-keycloak/web";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -37,14 +37,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     localStorage.setItem("sidebarOpen", sidebarOpen.toString());
   }, [sidebarOpen]);
-
-  const handleSidebarToggle = () => {
-    dispatch(toggleSidebar());
-  };
-
-  const handleMobileSidebarOpen = () => {
-    dispatch(setSidebarOpen(true));
-  };
 
   if (!initialized) {
     return (
