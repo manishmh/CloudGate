@@ -11,7 +11,6 @@ import {
   DASHBOARD_QUICK_ACTIONS,
   DEFAULT_APP_CONNECTIONS,
   DEFAULT_DASHBOARD_METRICS,
-  DEFAULT_RECENT_ACTIVITY,
   ERROR_MESSAGES,
   FALLBACK_SAAS_APPS,
 } from "@/constants";
@@ -45,14 +44,91 @@ interface DashboardMetricsType {
   lastActivity: string;
 }
 
+// Helper function to map security event types to activity types and icons
+const mapSecurityEventToActivity = (event: any): ActivityItem => {
+  let activityType: ActivityItem["type"] = "security";
+  let icon = "HiShieldCheck";
+  let severity: ActivityItem["severity"] = "info";
+
+  // Map event types to appropriate activity types and icons
+  switch (event.event_type.toLowerCase()) {
+    case "login":
+    case "authentication":
+    case "login_success":
+    case "login_failure":
+      activityType = "login";
+      icon =
+        event.event_type.includes("failure") ||
+        event.event_type.includes("failed")
+          ? "HiExclamationCircle"
+          : "HiShieldCheck";
+      severity =
+        event.event_type.includes("failure") ||
+        event.event_type.includes("failed")
+          ? "warning"
+          : "success";
+      break;
+    case "app_launch":
+    case "application_access":
+      activityType = "app_launch";
+      icon = "HiViewGrid";
+      severity = "info";
+      break;
+    case "connection":
+    case "oauth_connection":
+    case "app_connection":
+      activityType = "connection";
+      icon = "HiLink";
+      severity = "success";
+      break;
+    default:
+      activityType = "security";
+      icon = "HiShieldCheck";
+      severity =
+        event.severity === "warning" || event.severity === "error"
+          ? "warning"
+          : event.severity === "critical"
+          ? "warning"
+          : "success";
+  }
+
+  // Format timestamp to relative time
+  const formatTimestamp = (dateString: string): string => {
+    const now = new Date();
+    const eventDate = new Date(dateString);
+    const diffInMinutes = Math.floor(
+      (now.getTime() - eventDate.getTime()) / (1000 * 60)
+    );
+
+    if (diffInMinutes < 1) return "Just now";
+    if (diffInMinutes < 60)
+      return `${diffInMinutes} minute${diffInMinutes === 1 ? "" : "s"} ago`;
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24)
+      return `${diffInHours} hour${diffInHours === 1 ? "" : "s"} ago`;
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} day${diffInDays === 1 ? "" : "s"} ago`;
+  };
+
+  return {
+    id: event.id,
+    type: activityType,
+    description: event.description,
+    timestamp: formatTimestamp(event.created_at),
+    icon,
+    severity,
+  };
+};
+
 export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [connections, setConnections] = useState<AppConnection[]>([
     ...DEFAULT_APP_CONNECTIONS,
   ]);
-  const [recentActivity] = useState<ActivityItem[]>([
-    ...DEFAULT_RECENT_ACTIVITY,
-  ]);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [loadingActivity, setLoadingActivity] = useState(true);
   const [metrics, setMetrics] = useState<DashboardMetricsType>({
     ...DEFAULT_DASHBOARD_METRICS,
   });
@@ -67,6 +143,43 @@ export default function Dashboard() {
       connectedApps: connectedCount,
     }));
   }, [connections]);
+
+  const loadRecentActivity = useCallback(async () => {
+    try {
+      setLoadingActivity(true);
+
+      // Fetch recent security events (limit to 10 to get enough for 5 recent activities)
+      const response = await apiClient.getSecurityEvents(10);
+
+      if (response.events && response.events.length > 0) {
+        // Transform security events to activity items
+        const activities = response.events
+          .map(mapSecurityEventToActivity)
+          .slice(0, 5); // Only show 5 most recent
+
+        setRecentActivity(activities);
+
+        // Update last activity time in metrics if we have activities
+        if (activities.length > 0) {
+          setMetrics((prev) => ({
+            ...prev,
+            lastActivity: activities[0].timestamp,
+          }));
+        }
+      } else {
+        // Fallback to empty array if no events
+        setRecentActivity([]);
+      }
+    } catch (error) {
+      console.warn(
+        "Failed to load recent activity from API, using empty array:",
+        error
+      );
+      setRecentActivity([]);
+    } finally {
+      setLoadingActivity(false);
+    }
+  }, []);
 
   const loadApps = useCallback(async () => {
     try {
@@ -110,7 +223,8 @@ export default function Dashboard() {
   // Initial load - runs only once on mount
   useEffect(() => {
     loadApps();
-  }, [loadApps]);
+    loadRecentActivity();
+  }, [loadApps, loadRecentActivity]);
 
   // Handle URL params for connection success - runs only once on mount
   useEffect(() => {
@@ -130,8 +244,11 @@ export default function Dashboard() {
 
       // Clean up URL
       window.history.replaceState({}, document.title, "/dashboard");
+
+      // Reload recent activity to include the new connection
+      loadRecentActivity();
     }
-  }, []); // Empty dependency array - runs only once
+  }, [loadRecentActivity]); // Include loadRecentActivity in dependencies
 
   // Update metrics when connections change
   useEffect(() => {
@@ -167,7 +284,29 @@ export default function Dashboard() {
         <QuickAccess connections={connections} />
 
         {/* Recent Activity */}
-        <RecentActivity activities={recentActivity} />
+        {loadingActivity ? (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Recent Activity
+            </h3>
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="animate-pulse flex items-start space-x-3"
+                >
+                  <div className="h-6 w-6 bg-gray-200 rounded-full"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <RecentActivity activities={recentActivity} />
+        )}
       </div>
 
       {/* Quick Actions */}

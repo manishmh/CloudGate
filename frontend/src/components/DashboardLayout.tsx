@@ -82,16 +82,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Main Content */}
       <div
         className={`transition-all duration-300 ${
-          sidebarOpen ? "lg:pl-64" : "lg:pl-20"
+          sidebarOpen ? "lg:pl-64" : "lg:pl-16"
         }`}
       >
         {/* Top Bar with integrated Header */}
-        <div className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
+        <div className="sticky top-0 z-30 bg-white py-1 border-b border-gray-200 shadow-sm">
           <div className="flex h-16 items-center">
             {/* Sidebar Toggle Button - Always visible */}
             <button
               type="button"
-              className="border-r border-gray-200 px-4 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors"
+              className="border-r border-gray-200 px-4 text-gray-500 hover:text-gray-700 focus:outline-none transition-colors"
               onClick={() => dispatch(setSidebarOpen(!sidebarOpen))}
               title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
             >
