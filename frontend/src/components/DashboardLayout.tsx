@@ -88,17 +88,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Top Bar with integrated Header */}
         <div className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
           <div className="flex h-16 items-center">
+            {/* Sidebar Toggle Button - Always visible */}
             <button
               type="button"
-              className="border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 lg:hidden"
-              onClick={() => dispatch(setSidebarOpen(true))}
+              className="border-r border-gray-200 px-4 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors"
+              onClick={() => dispatch(setSidebarOpen(!sidebarOpen))}
+              title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
             >
-              <span className="sr-only">Open sidebar</span>
+              <span className="sr-only">
+                {sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+              </span>
               <HiMenuAlt2 className="h-6 w-6" aria-hidden="true" />
             </button>
 
             <div className="flex flex-1 justify-between px-4">
-              <div className="flex flex-col justify-center">
+              <div className="flex flex-col justify-center space-y-1">
                 <h1 className="text-xl font-bold tracking-tight text-gray-900">
                   {breadcrumbNameMap[pathname] || "Dashboard"}
                 </h1>
