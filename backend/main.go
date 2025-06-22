@@ -14,6 +14,7 @@ import (
 	"cloudgate-backend/internal/services"
 )
 
+// CloudGate Backend - v1.0.1 - CI/CD Pipeline Test
 func main() {
 	// Load .env file (optional for Cloud Run)
 	if err := godotenv.Load(); err != nil {
