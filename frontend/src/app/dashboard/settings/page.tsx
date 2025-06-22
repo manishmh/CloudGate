@@ -10,7 +10,6 @@ import {
   updateSettings,
 } from "@/store/slices/settingsSlice";
 import { useEffect, useState } from "react";
-import { IoCheckmark, IoSave } from "react-icons/io5";
 
 export default function SettingsPage() {
   const dispatch = useAppDispatch();
@@ -125,41 +124,9 @@ export default function SettingsPage() {
     }
   };
 
-  const isLoading = loading || localLoading;
-  const showSaved = lastSaved && !isLoading && !error;
-
-  const saveAction = (
-    <div className="flex items-center space-x-2">
-      {showSaved && (
-        <div className="flex items-center text-green-600 text-sm">
-          <IoCheckmark className="h-4 w-4 mr-1" />
-          Saved
-        </div>
-      )}
-      <button
-        onClick={handleReset}
-        disabled={isLoading}
-        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
-      >
-        Reset to Defaults
-      </button>
-      <button
-        onClick={handleSave}
-        disabled={isLoading}
-        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
-      >
-        <IoSave className="h-4 w-4 mr-2" />
-        {isLoading ? "Saving..." : "Save Changes"}
-      </button>
-    </div>
-  );
-
   if (loading) {
     return (
-      <DashboardLayout
-        title="Settings"
-        description="Customize your CloudGate experience"
-      >
+      <DashboardLayout>
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
@@ -168,11 +135,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <DashboardLayout
-      title="Settings"
-      description="Customize your CloudGate experience"
-      actions={saveAction}
-    >
+    <DashboardLayout>
       {/* Error Message */}
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">

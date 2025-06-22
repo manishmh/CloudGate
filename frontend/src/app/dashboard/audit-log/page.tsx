@@ -6,10 +6,8 @@ import { useCallback, useEffect, useState } from "react";
 import {
   IoCalendar,
   IoCheckmarkCircle,
-  IoDownload,
   IoFilter,
   IoInformationCircle,
-  IoRefresh,
   IoSearch,
   IoShieldCheckmark,
   IoWarning,
@@ -108,15 +106,6 @@ export default function AuditLogPage() {
     setPage(1);
   };
 
-  const handleExportLogs = async () => {
-    try {
-      // In a real implementation, this would call an export endpoint
-      toast.success("Export started. You'll receive an email when it's ready.");
-    } catch {
-      toast.error("Failed to export logs");
-    }
-  };
-
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case "critical":
@@ -164,32 +153,8 @@ export default function AuditLogPage() {
     return matchesSearch && matchesCategory && matchesSeverity && matchesDate;
   });
 
-  const refreshAction = (
-    <div className="flex gap-2">
-      <button
-        onClick={handleExportLogs}
-        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-      >
-        <IoDownload className="h-4 w-4 mr-2" />
-        Export
-      </button>
-      <button
-        onClick={loadAuditEvents}
-        disabled={loading}
-        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-      >
-        <IoRefresh className="h-4 w-4 mr-2" />
-        {loading ? "Refreshing..." : "Refresh"}
-      </button>
-    </div>
-  );
-
   return (
-    <DashboardLayout
-      title="Audit Log"
-      description="View comprehensive system and user activity logs"
-      actions={refreshAction}
-    >
+    <DashboardLayout>
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex items-center mb-4">

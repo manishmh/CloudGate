@@ -3,7 +3,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import Link from "next/link";
 import { useState } from "react";
-import { IoHelpCircle, IoRefresh, IoShare } from "react-icons/io5";
+import { IoHelpCircle, IoShare } from "react-icons/io5";
 
 interface QuickAction {
   id: string;
@@ -189,28 +189,8 @@ export default function QuickActionsPage() {
     { id: "support", name: "Support", color: "yellow", icon: "💬" },
   ];
 
-  const handleRefresh = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 1000);
-  };
-
-  const refreshAction = (
-    <button
-      onClick={handleRefresh}
-      disabled={loading}
-      className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-    >
-      <IoRefresh className="h-4 w-4 mr-2" />
-      {loading ? "Refreshing..." : "Refresh"}
-    </button>
-  );
-
   return (
-    <DashboardLayout
-      title="Quick Actions"
-      description="Common tasks and shortcuts for your account"
-      actions={refreshAction}
-    >
+    <DashboardLayout>
       {/* Categories Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {categories.map((category) => {

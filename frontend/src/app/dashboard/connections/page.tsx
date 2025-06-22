@@ -5,10 +5,7 @@ import OAuthConnectionDashboard from "@/components/dashboard/OAuthConnectionDash
 
 export default function ConnectionsPage() {
   return (
-    <DashboardLayout
-      title="App Connections"
-      description="Manage your connected applications and services"
-    >
+    <DashboardLayout>
       <OAuthConnectionDashboard />
     </DashboardLayout>
   );
