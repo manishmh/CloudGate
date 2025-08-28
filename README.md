@@ -1,3 +1,7 @@
+## Test user for login
+## email - testuser@gmail.com 
+## password - Test@123
+
 # 🚀 CloudGate - Enterprise SSO Portal
 
 **Secure Single Sign-On for SaaS Applications**
