@@ -41,8 +41,8 @@ COPY --from=builder /build/cloudgate-backend /cloudgate-backend
 # Use non-root user
 USER appuser
 
-# Expose the port defined by environment variable (Cloud Run uses 8080 by default)
-EXPOSE 8080
+# Render/production default port (app reads PORT; default 8081)
+EXPOSE 8081
 
 # Run the binary
 ENTRYPOINT ["/cloudgate-backend"] 

@@ -40,9 +40,10 @@ func setupTestRiskService(t *testing.T) (*gorm.DB, *models.User) {
 	db := setupRiskTestDB(t)
 
 	// Create test user
+	kc := "test-keycloak-id"
 	user := &models.User{
 		ID:         uuid.New(),
-		KeycloakID: "test-keycloak-id",
+		KeycloakID: &kc,
 		Email:      "test@example.com",
 		Username:   "testuser",
 		FirstName:  "Test",

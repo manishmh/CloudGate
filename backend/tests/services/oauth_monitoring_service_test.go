@@ -37,9 +37,10 @@ func setupOAuthTestDB(t *testing.T) *gorm.DB {
 
 // createTestUser creates a test user for OAuth monitoring tests
 func createTestUser(t *testing.T, db *gorm.DB) *models.User {
+	kc := "test-keycloak-id"
 	user := &models.User{
 		ID:         uuid.New(),
-		KeycloakID: "test-keycloak-id",
+		KeycloakID: &kc,
 		Email:      "test@example.com",
 		Username:   "testuser",
 		FirstName:  "Test",

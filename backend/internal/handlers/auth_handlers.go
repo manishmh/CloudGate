@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"cloudgate-backend/internal/config"
@@ -92,9 +93,18 @@ func LoginHandler(userService *services.UserService, sessionService *services.Se
 			return
 		}
 
+		// Configure cookie attributes for deployment (e.g., Render)
+		cookieDomain := os.Getenv("COOKIE_DOMAIN")
+		cookieSecure := os.Getenv("COOKIE_SECURE") == "true"
+		if cookieSecure {
+			c.SetSameSite(http.SameSiteNoneMode)
+		} else {
+			c.SetSameSite(http.SameSiteLaxMode)
+		}
+
 		// Set tokens as HTTP-only cookies for browser auth
-		c.SetCookie("access_token", accessToken, expiresIn, "/", "", false, true)
-		c.SetCookie("refresh_token", session.SessionToken, cfg.RefreshTokenTTLHour*3600, "/", "", false, true)
+		c.SetCookie("access_token", accessToken, expiresIn, "/", cookieDomain, cookieSecure, true)
+		c.SetCookie("refresh_token", session.SessionToken, cfg.RefreshTokenTTLHour*3600, "/", cookieDomain, cookieSecure, true)
 
 		c.JSON(http.StatusOK, tokenResponse{
 			AccessToken:  accessToken,
@@ -134,7 +144,14 @@ func RefreshHandler(sessionService *services.SessionService, cfg *config.Config)
 			return
 		}
 		// Update access token cookie
-		c.SetCookie("access_token", accessToken, expiresIn, "/", "", false, true)
+		cookieDomain := os.Getenv("COOKIE_DOMAIN")
+		cookieSecure := os.Getenv("COOKIE_SECURE") == "true"
+		if cookieSecure {
+			c.SetSameSite(http.SameSiteNoneMode)
+		} else {
+			c.SetSameSite(http.SameSiteLaxMode)
+		}
+		c.SetCookie("access_token", accessToken, expiresIn, "/", cookieDomain, cookieSecure, true)
 
 		c.JSON(http.StatusOK, tokenResponse{
 			AccessToken:  accessToken,
@@ -160,8 +177,15 @@ func LogoutHandler(sessionService *services.SessionService) gin.HandlerFunc {
 			return
 		}
 		// Clear cookies
-		c.SetCookie("access_token", "", -1, "/", "", false, true)
-		c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+		cookieDomain := os.Getenv("COOKIE_DOMAIN")
+		cookieSecure := os.Getenv("COOKIE_SECURE") == "true"
+		if cookieSecure {
+			c.SetSameSite(http.SameSiteNoneMode)
+		} else {
+			c.SetSameSite(http.SameSiteLaxMode)
+		}
+		c.SetCookie("access_token", "", -1, "/", cookieDomain, cookieSecure, true)
+		c.SetCookie("refresh_token", "", -1, "/", cookieDomain, cookieSecure, true)
 		c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
 	}
 }

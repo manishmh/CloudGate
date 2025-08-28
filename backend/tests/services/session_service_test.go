@@ -31,9 +31,10 @@ func setupTestSessionService(t *testing.T) (*services.SessionService, *gorm.DB, 
 	db := setupSessionTestDB(t)
 
 	// Create test user
+	kc := "test-keycloak-id"
 	user := &models.User{
 		ID:         uuid.New(),
-		KeycloakID: "test-keycloak-id",
+		KeycloakID: &kc,
 		Email:      "test@example.com",
 		Username:   "testuser",
 		FirstName:  "Test",
@@ -250,9 +251,10 @@ func TestSessionService_GetUserSessions(t *testing.T) {
 
 	t.Run("should return empty list for user with no active sessions", func(t *testing.T) {
 		// Create new user
+		kc2 := "test-keycloak-id-2"
 		newUser := &models.User{
 			ID:         uuid.New(),
-			KeycloakID: "test-keycloak-id-2",
+			KeycloakID: &kc2,
 			Email:      "test2@example.com",
 			Username:   "testuser2",
 		}

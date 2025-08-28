@@ -33,9 +33,10 @@ func setupTestUserSettingsService(t *testing.T) (*services.UserSettingsService, 
 	db := setupUserSettingsTestDB(t)
 
 	// Create test user
+	kc := "test-keycloak-id"
 	user := &models.User{
 		ID:         uuid.New(),
-		KeycloakID: "test-keycloak-id",
+		KeycloakID: &kc,
 		Email:      "test@example.com",
 		Username:   "testuser",
 		FirstName:  "Test",
@@ -92,9 +93,10 @@ func TestUserSettingsService_GetUserSettings(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Create new user for this test
+		kc2 := "test-keycloak-id-2"
 		newUser := &models.User{
 			ID:         uuid.New(),
-			KeycloakID: "test-keycloak-id-2",
+			KeycloakID: &kc2,
 			Email:      "test2@example.com",
 			Username:   "testuser2",
 		}
@@ -121,9 +123,10 @@ func TestUserSettingsService_CreateDefaultSettings(t *testing.T) {
 	service, db, _ := setupTestUserSettingsService(t)
 
 	t.Run("should create default settings", func(t *testing.T) {
+		kc3 := "test-keycloak-id-3"
 		newUser := &models.User{
 			ID:         uuid.New(),
-			KeycloakID: "test-keycloak-id-3",
+			KeycloakID: &kc3,
 			Email:      "test3@example.com",
 			Username:   "testuser3",
 		}
@@ -146,9 +149,10 @@ func TestUserSettingsService_CreateDefaultSettings(t *testing.T) {
 	})
 
 	t.Run("should save settings to database", func(t *testing.T) {
+		kc4 := "test-keycloak-id-4"
 		newUser := &models.User{
 			ID:         uuid.New(),
-			KeycloakID: "test-keycloak-id-4",
+			KeycloakID: &kc4,
 			Email:      "test4@example.com",
 			Username:   "testuser4",
 		}
@@ -203,9 +207,10 @@ func TestUserSettingsService_UpdateUserSettings(t *testing.T) {
 	})
 
 	t.Run("should create default settings if none exist and then update", func(t *testing.T) {
+		kc5 := "test-keycloak-id-5"
 		newUser := &models.User{
 			ID:         uuid.New(),
-			KeycloakID: "test-keycloak-id-5",
+			KeycloakID: &kc5,
 			Email:      "test5@example.com",
 			Username:   "testuser5",
 		}
@@ -325,9 +330,10 @@ func TestUserSettingsService_ResetUserSettings(t *testing.T) {
 	})
 
 	t.Run("should handle resetting non-existent settings", func(t *testing.T) {
+		kc6 := "test-keycloak-id-6"
 		newUser := &models.User{
 			ID:         uuid.New(),
-			KeycloakID: "test-keycloak-id-6",
+			KeycloakID: &kc6,
 			Email:      "test6@example.com",
 			Username:   "testuser6",
 		}

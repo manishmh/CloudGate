@@ -81,6 +81,8 @@ func main() {
 
 	// Create router
 	router := gin.Default()
+	// Trust proxy headers (Render, etc.) to get correct client IP and scheme
+	_ = router.SetTrustedProxies(nil)
 
 	// Setup middleware
 	router.Use(middleware.SetupCORS(cfg))

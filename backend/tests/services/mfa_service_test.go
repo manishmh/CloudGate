@@ -34,9 +34,10 @@ func setupTestMFAService(t *testing.T) (*gorm.DB, *models.User) {
 	db := setupMFATestDB(t)
 
 	// Create test user
+	keycloak := "test-keycloak-id"
 	user := &models.User{
 		ID:         uuid.New(),
-		KeycloakID: "test-keycloak-id",
+		KeycloakID: &keycloak,
 		Email:      "test@example.com",
 		Username:   "testuser",
 		FirstName:  "Test",
