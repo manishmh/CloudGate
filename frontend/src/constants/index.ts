@@ -1,15 +1,8 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081',
+  BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8081',
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
-} as const;
-
-// Keycloak Configuration
-export const KEYCLOAK_CONFIG = {
-  URL: process.env.NEXT_PUBLIC_KEYCLOAK_URL || 'http://localhost:8080',
-  REALM: process.env.NEXT_PUBLIC_KEYCLOAK_REALM || 'cloudgate',
-  CLIENT_ID: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || 'cloudgate-frontend',
 } as const;
 
 // Demo User Data

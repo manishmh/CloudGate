@@ -18,10 +18,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Set build-time environment variables
-ENV NEXT_PUBLIC_API_URL=https://cloudgate-backend-258151641965.us-central1.run.app
-ENV NEXT_PUBLIC_KEYCLOAK_URL=https://cloudgate-keycloak-258151641965.us-central1.run.app
-ENV NEXT_PUBLIC_KEYCLOAK_REALM=cloudgate
-ENV NEXT_PUBLIC_KEYCLOAK_CLIENT_ID=cloudgate-frontend
+ENV NEXT_PUBLIC_API_BASE_URL=https://cloudgate-backend-258151641965.us-central1.run.app
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application

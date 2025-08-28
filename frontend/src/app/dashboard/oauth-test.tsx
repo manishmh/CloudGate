@@ -81,7 +81,7 @@ export default function OAuthTest() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}${
+        `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081"}${
           app.connectUrl
         }`,
         {
@@ -119,7 +119,9 @@ export default function OAuthTest() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}/health`
+        `${
+          process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081"
+        }/health`
       );
       if (response.ok) {
         const data = await response.json();
@@ -232,7 +234,7 @@ export default function OAuthTest() {
                         try {
                           const response = await fetch(
                             `${
-                              process.env.NEXT_PUBLIC_API_URL ||
+                              process.env.NEXT_PUBLIC_API_BASE_URL ||
                               "http://localhost:8081"
                             }${app.connectUrl}`
                           );
@@ -275,17 +277,14 @@ export default function OAuthTest() {
             <div className="text-sm text-gray-600 space-y-1">
               <p>
                 <strong>Backend URL:</strong>{" "}
-                {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"}
+                {process.env.NEXT_PUBLIC_API_BASE_URL ||
+                  "http://localhost:8081"}
               </p>
               <p>
                 <strong>Frontend URL:</strong>{" "}
                 {process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}
               </p>
-              <p>
-                <strong>Keycloak URL:</strong>{" "}
-                {process.env.NEXT_PUBLIC_KEYCLOAK_URL ||
-                  "http://localhost:8080"}
-              </p>
+
               <p>
                 <strong>Current URL:</strong>{" "}
                 {typeof window !== "undefined" ? window.location.href : "N/A"}

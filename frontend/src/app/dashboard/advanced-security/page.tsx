@@ -1,12 +1,12 @@
 "use client";
 
 import DashboardLayout from "@/components/DashboardLayout";
+import { useAuth } from "@/components/providers/AuthProvider";
 import {
   apiClient,
   type AdaptiveAuthResponse,
   type RiskAssessment as ApiRiskAssessment,
 } from "@/lib/api";
-import { useKeycloak } from "@react-keycloak/web";
 import { useCallback, useEffect, useState } from "react";
 import {
   IoAlertCircle,
@@ -32,7 +32,7 @@ interface WebAuthnCredential {
 }
 
 export default function AdvancedSecurityPage() {
-  const { keycloak } = useKeycloak();
+  const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<"webauthn" | "risk" | "saml">(
     "webauthn"
   );
@@ -121,10 +121,10 @@ export default function AdvancedSecurityPage() {
       setAdaptiveAuthResponse(compatibleResponse);
 
       // Load risk history - create mock data since backend format is different
-      if (keycloak?.tokenParsed?.sub) {
+      if (isAuthenticated) {
         const mockHistory: ApiRiskAssessment[] = [
           {
-            user_id: keycloak.tokenParsed.sub,
+            user_id: "12345678-1234-1234-1234-123456789012",
             risk_score: authResponse.risk_score,
             risk_level: authResponse.risk_level,
             risk_factors: [],
@@ -157,7 +157,7 @@ export default function AdvancedSecurityPage() {
     } finally {
       setLoading(false);
     }
-  }, [keycloak]);
+  }, [isAuthenticated]);
 
   // Load initial data
   useEffect(() => {
@@ -858,7 +858,7 @@ export default function AdvancedSecurityPage() {
                       SSO URL
                     </label>
                     <div className="p-3 bg-gray-50 rounded-lg font-mono text-sm">
-                      {process.env.NEXT_PUBLIC_API_URL ||
+                      {process.env.NEXT_PUBLIC_API_BASE_URL ||
                         "http://localhost:8081"}
                       /saml/sso
                     </div>
@@ -869,7 +869,7 @@ export default function AdvancedSecurityPage() {
                       Metadata URL
                     </label>
                     <div className="p-3 bg-gray-50 rounded-lg font-mono text-sm">
-                      {process.env.NEXT_PUBLIC_API_URL ||
+                      {process.env.NEXT_PUBLIC_API_BASE_URL ||
                         "http://localhost:8081"}
                       /saml/metadata
                     </div>
@@ -912,7 +912,8 @@ export default function AdvancedSecurityPage() {
                 <div className="mt-6">
                   <a
                     href={`${
-                      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
+                      process.env.NEXT_PUBLIC_API_BASE_URL ||
+                      "http://localhost:8081"
                     }/saml/metadata`}
                     target="_blank"
                     rel="noopener noreferrer"

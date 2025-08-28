@@ -10,11 +10,12 @@ import (
 // User represents a user in the system
 type User struct {
 	ID                uuid.UUID      `gorm:"type:text;primary_key" json:"id"`
-	KeycloakID        string         `gorm:"uniqueIndex;not null" json:"keycloak_id"`
+	KeycloakID        *string        `gorm:"uniqueIndex;default:null" json:"keycloak_id,omitempty"`
 	Email             string         `gorm:"uniqueIndex;not null" json:"email"`
 	EmailVerified     bool           `gorm:"default:false" json:"email_verified"`
 	EmailVerifiedAt   *time.Time     `json:"email_verified_at,omitempty"`
 	Username          string         `gorm:"uniqueIndex;not null" json:"username"`
+	PasswordHash      string         `gorm:"type:text" json:"-"`
 	FirstName         string         `json:"first_name"`
 	LastName          string         `json:"last_name"`
 	ProfilePictureURL string         `json:"profile_picture_url,omitempty"`

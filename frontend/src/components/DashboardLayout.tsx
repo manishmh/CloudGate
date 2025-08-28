@@ -1,8 +1,8 @@
 "use client";
 
+import { useAuth } from "@/components/providers/AuthProvider";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setSidebarOpen } from "@/store/slices/sidebarSlice";
-import { useKeycloak } from "@react-keycloak/web";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { HiHome, HiMenuAlt2 } from "react-icons/hi";
@@ -26,7 +26,7 @@ const breadcrumbNameMap: { [key: string]: string } = {
 };
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { keycloak, initialized } = useKeycloak();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const dispatch = useAppDispatch();
@@ -35,10 +35,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathParts = pathname.split("/").filter((part) => part);
 
   useEffect(() => {
-    if (initialized && !keycloak?.authenticated) {
+    if (!isAuthenticated) {
       router.push("/login");
     }
-  }, [initialized, keycloak?.authenticated, router]);
+  }, [isAuthenticated, router]);
 
   // Load sidebar state from localStorage on mount
   useEffect(() => {
@@ -53,18 +53,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     localStorage.setItem("sidebarOpen", sidebarOpen.toString());
   }, [sidebarOpen]);
 
-  if (!initialized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!keycloak?.authenticated) {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

@@ -172,6 +172,7 @@ class ApiClient {
 
       const response = await fetch(url, {
         ...config,
+        credentials: 'include',
         signal: controller.signal,
       });
 
@@ -179,7 +180,21 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        const message = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+        if (response.status === 401) {
+          const isAuthPage = typeof window !== 'undefined' && (window.location.pathname.startsWith('/login') || window.location.pathname.startsWith('/register'));
+          // Clear invalid tokens
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('refresh_token');
+          }
+          if (isAuthPage) {
+            // Suppress noisy 401s on auth pages (e.g., background prefetches)
+            throw new Error('');
+          }
+          throw new Error('User not authenticated');
+        }
+        throw new Error(message);
       }
 
       return await response.json();
@@ -195,12 +210,10 @@ class ApiClient {
   }
 
   private getAuthToken(): string | null {
-    // In a real app, this would get the token from your auth provider (Keycloak)
-    // For now, we'll use a demo token - this should be replaced with real Keycloak integration
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('auth_token') || 'demo-user-token';
+      return localStorage.getItem('auth_token');
     }
-    return 'demo-user-token';
+    return null;
   }
 
   // Health check
@@ -412,7 +425,7 @@ class ApiClient {
     // For demo purposes, use demo user data
     const requestData = {
       user_id: '12345678-1234-1234-1234-123456789012', // Valid UUID for demo user
-      email: 'demo@cloudgate.com', // This should come from Keycloak token in production
+      email: 'demo@cloudgate.com', // In production, derive from validated JWT
       ip_address: ipAddress,
       user_agent: userAgent,
       device_fingerprint: data.device_fingerprint,

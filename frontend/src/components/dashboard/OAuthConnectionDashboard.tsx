@@ -51,11 +51,11 @@ export default function OAuthConnectionDashboard() {
 
       // Load connections and stats in parallel
       const [connectionsResponse, statsResponse] = await Promise.all([
-        apiClient.getConnections(),
-        apiClient.getConnectionStats(),
+        apiClient.getConnections().catch(() => ({ connections: [], count: 0 })),
+        apiClient.getConnectionStats().catch(() => null),
       ]);
 
-      setConnections(connectionsResponse.connections);
+      setConnections(connectionsResponse?.connections || []);
       setStats(statsResponse);
     } catch (err) {
       console.error("Failed to load connections:", err);

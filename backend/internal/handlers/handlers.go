@@ -1,21 +1,15 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"net/url"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"cloudgate-backend/internal/config"
 	"cloudgate-backend/internal/services"
-	"cloudgate-backend/pkg/constants"
 	"cloudgate-backend/pkg/types"
 )
 
@@ -41,8 +35,10 @@ func APIInfoHandler(c *gin.Context) {
 		Description: "Enterprise SSO Portal Backend API",
 		Endpoints: []string{
 			"GET /health - Health check",
-			"POST /token/introspect - Token introspection",
-			"GET /user/info - User information",
+			"POST /auth/login - Login with email/password",
+			"POST /auth/register - Register new user",
+			"POST /auth/refresh - Refresh access token",
+			"POST /auth/logout - Logout and revoke refresh token",
 			"GET /api/info - API information",
 			"GET /apps - List SaaS applications",
 			"POST /apps/connect - Connect to a SaaS application",
@@ -53,136 +49,7 @@ func APIInfoHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// TokenIntrospectionHandler handles JWT token introspection requests
-func TokenIntrospectionHandler(cfg *config.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		log.Printf("🔍 Token Introspection Request from %s", c.ClientIP())
-
-		var request types.TokenIntrospectionRequest
-
-		if err := c.ShouldBindJSON(&request); err != nil {
-			log.Printf("❌ Invalid request body for token introspection: %v", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-			return
-		}
-
-		log.Printf("🔑 Token introspection for token length: %d", len(request.Token))
-
-		// Prepare introspection request to Keycloak
-		introspectionURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token/introspect",
-			cfg.KeycloakURL, cfg.KeycloakRealm)
-
-		log.Printf("🌐 Keycloak introspection URL: %s", introspectionURL)
-
-		data := url.Values{}
-		data.Set("token", request.Token)
-		data.Set("client_id", cfg.KeycloakClientID)
-
-		req, err := http.NewRequest("POST", introspectionURL, strings.NewReader(data.Encode()))
-		if err != nil {
-			log.Printf("Error creating introspection request: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-			return
-		}
-
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-		client := &http.Client{Timeout: 10 * time.Second}
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Printf("Error making introspection request: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to introspect token"})
-			return
-		}
-		defer resp.Body.Close()
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Printf("Error reading introspection response: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read response"})
-			return
-		}
-
-		var introspectionResp types.TokenIntrospectionResponse
-		if err := json.Unmarshal(body, &introspectionResp); err != nil {
-			log.Printf("Error parsing introspection response: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse response"})
-			return
-		}
-
-		c.JSON(http.StatusOK, introspectionResp)
-	}
-}
-
-// UserInfoHandler handles user information requests
-func UserInfoHandler(cfg *config.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		log.Printf("👤 User Info Request from %s", c.ClientIP())
-
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			log.Printf("❌ Missing Authorization header")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
-			return
-		}
-
-		// Extract token from Bearer header
-		tokenParts := strings.Split(authHeader, " ")
-		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			log.Printf("❌ Invalid Authorization header format: %s", authHeader)
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
-			return
-		}
-
-		token := tokenParts[1]
-		log.Printf("🔑 Extracted token length: %d", len(token))
-
-		// Get user info from Keycloak
-		userInfoURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/userinfo",
-			cfg.KeycloakURL, cfg.KeycloakRealm)
-
-		log.Printf("🌐 Keycloak userinfo URL: %s", userInfoURL)
-
-		req, err := http.NewRequest("GET", userInfoURL, nil)
-		if err != nil {
-			log.Printf("Error creating userinfo request: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-			return
-		}
-
-		req.Header.Set("Authorization", "Bearer "+token)
-
-		client := &http.Client{Timeout: 10 * time.Second}
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Printf("Error making userinfo request: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user info"})
-			return
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
-			return
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Printf("Error reading userinfo response: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read response"})
-			return
-		}
-
-		var userInfo map[string]interface{}
-		if err := json.Unmarshal(body, &userInfo); err != nil {
-			log.Printf("Error parsing userinfo response: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse response"})
-			return
-		}
-
-		c.JSON(http.StatusOK, userInfo)
-	}
-}
+// Legacy Keycloak proxy endpoints removed during JWT migration.
 
 // GetAppsHandler returns all SaaS applications with user connection status
 func GetAppsHandler(c *gin.Context) {
@@ -221,33 +88,36 @@ func ConnectAppHandler(c *gin.Context) {
 		return
 	}
 
-	// Create or update user connection
-	services.CreateUserAppConnection(userID, request.AppID)
-
-	// Generate OAuth URL
-	state := services.GenerateState()
-	// Use NEXT_PUBLIC_API_URL if available (for production), otherwise fallback to localhost
-	backendURL := getEnv("NEXT_PUBLIC_API_URL", "http://localhost:8081")
-	authURL := fmt.Sprintf("%s?client_id=%s&redirect_uri=%s&scope=%s&response_type=code&state=%s",
-		app.Config["auth_url"],
-		app.Config["client_id"],
-		url.QueryEscape(backendURL+"/apps/callback"),
-		url.QueryEscape(app.Config["scope"]),
-		state,
-	)
-
-	// Store state for validation (in production, use Redis or database)
-	// For demo, we'll skip state validation
+	// Simulate OAuth connection initiation
+	connectionURL := fmt.Sprintf("https://auth.%s.com/oauth2/authorize?client_id=%s&redirect_uri=%s&response_type=code&scope=%s",
+		app.ID, "your_client_id", "https://yourapp.com/oauth/callback", "read write")
 
 	response := types.AppConnectionResponse{
-		AuthURL: authURL,
-		State:   state,
+		AuthURL: connectionURL,
+		State:   "mock_state_value",
 	}
 
 	c.JSON(http.StatusOK, response)
 }
 
-// LaunchAppHandler handles application launch requests
+// OAuthCallbackHandler handles OAuth callback from SaaS providers
+func OAuthCallbackHandler(c *gin.Context) {
+	code := c.Query("code")
+	state := c.Query("state")
+
+	if code == "" || state == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing code or state"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "OAuth callback received",
+		"code":    code,
+		"state":   state,
+	})
+}
+
+// LaunchAppHandler simulates launching a connected SaaS application
 func LaunchAppHandler(c *gin.Context) {
 	var request types.AppLaunchRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -261,98 +131,26 @@ func LaunchAppHandler(c *gin.Context) {
 		return
 	}
 
-	// Get app configuration
-	app, exists := services.GetSaaSApp(request.AppID)
-	if !exists {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Application not found"})
-		return
-	}
-
-	// Check if user is connected to the app
-	connection, exists := services.GetUserAppConnection(userID, request.AppID)
-	if !exists || connection.Status != constants.StatusConnected {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Not connected to this application"})
-		return
-	}
-
-	// Get launch URL from constants
-	launchURL, exists := constants.LaunchURLs[request.AppID]
-	if !exists {
-		launchURL = app.LaunchURL
-	}
-
-	// If still no launch URL, use a default
-	if launchURL == "" {
-		launchURL = "https://example.com"
-	}
-
-	// Update last access time
-	services.UpdateUserAppConnection(userID, request.AppID, map[string]interface{}{
-		"last_access_at": time.Now().UTC().Format(time.RFC3339),
-	})
+	// Simulate generating a temporary access token for app launch
+	launchToken := uuid.New().String()
 
 	response := types.AppLaunchResponse{
-		LaunchURL: launchURL,
+		LaunchURL: fmt.Sprintf("https://app.%s.com/dashboard?token=%s", request.AppID, launchToken),
 		Method:    "redirect",
-		ExpiresIn: 3600,
+		Token:     launchToken,
+		ExpiresIn: 300,
 	}
 
 	c.JSON(http.StatusOK, response)
 }
 
-// OAuthCallbackHandler handles OAuth callbacks from SaaS applications
-func OAuthCallbackHandler(c *gin.Context) {
-	code := c.Query("code")
-	state := c.Query("state")
-	appID := c.Query("app_id")
-
-	if code == "" || state == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing code or state parameter"})
-		return
-	}
-
-	// For demo purposes, we'll simulate successful OAuth completion
-	// In production, you would exchange the code for tokens
-
-	// Simulate finding the user (in production, you'd validate the state)
-	userID := constants.DemoUserID // This would come from the state parameter
-
-	// Update connection status
-	err := services.UpdateUserAppConnection(userID, appID, map[string]interface{}{
-		"status":       constants.StatusConnected,
-		"access_token": constants.DemoAccessToken,
-		"expires_at":   time.Now().Add(time.Hour).UTC().Format(time.RFC3339),
-	})
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update connection"})
-		return
-	}
-
-	// Redirect back to frontend
-	frontendURL := getEnv("FRONTEND_URL", "http://localhost:3000")
-	c.Redirect(http.StatusFound, frontendURL+"/dashboard?connected="+appID)
-}
-
-// Helper function to extract user ID from context
-// This gets the user ID set by the authentication middleware
+// Helper function to extract user ID from request context
 func getUserIDFromContext(c *gin.Context) string {
-	// Try to get userID from context (set by authentication middleware)
-	userIDInterface, exists := c.Get("userID")
-	if exists {
-		if userID, ok := userIDInterface.(uuid.UUID); ok {
-			return userID.String()
-		}
-	}
-
-	// Fallback: For endpoints without authentication middleware
-	authHeader := c.GetHeader("Authorization")
-	if authHeader == "" {
+	userID, exists := c.Get("userID")
+	if !exists {
 		return ""
 	}
-
-	// Simplified: just return demo user ID if auth header exists
-	return constants.DemoUserID
+	return userID.(uuid.UUID).String()
 }
 
 // DatabaseHealthCheckHandler checks database connectivity

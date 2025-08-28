@@ -1,60 +1,49 @@
 "use client";
 
-import { useKeycloak } from "@react-keycloak/web";
+import { useAuth } from "@/components/providers/AuthProvider";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function LoginPage() {
-  const { keycloak, initialized } = useKeycloak();
+  const { isAuthenticated, login } = useAuth();
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("🔍 Login Page State:", {
-      initialized,
-      authenticated: keycloak?.authenticated,
-      keycloakInstance: keycloak ? "present" : "missing",
-      timestamp: new Date().toISOString(),
-    });
+    if (isAuthenticated) router.replace("/dashboard");
+  }, [isAuthenticated, router]);
 
-    if (initialized && keycloak?.authenticated) {
-      console.log("🎯 Redirecting to dashboard - user is authenticated");
-      // Use replace instead of push to avoid back button issues
+  const handleLogin = async (e?: React.FormEvent<HTMLFormElement>) => {
+    if (e) e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      await login(email, password);
       router.replace("/dashboard");
-    }
-  }, [initialized, keycloak, router]);
-
-  const handleLogin = () => {
-    console.log("🚀 Login button clicked", {
-      keycloak: keycloak ? "present" : "missing",
-      initialized,
-      timestamp: new Date().toISOString(),
-    });
-
-    if (keycloak) {
-      try {
-        console.log("🔐 Calling keycloak.login()...");
-        keycloak.login();
-      } catch (error) {
-        console.error("❌ Keycloak login error:", error);
-      }
-    } else {
-      console.error("❌ Keycloak instance not available for login");
+    } catch (e: any) {
+      setError(e?.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!initialized) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">Initializing...</p>
+          <p className="text-gray-600 text-lg">Signing in...</p>
         </div>
       </div>
     );
   }
 
   // Show loading screen if already authenticated to prevent flash
-  if (keycloak?.authenticated) {
+  if (isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
@@ -93,34 +82,45 @@ export default function LoginPage() {
           </div>
 
           {/* Login Form */}
-          <div className="space-y-6">
+          <form className="space-y-6" onSubmit={handleLogin}>
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-6">
+              <p className="text-sm text-black mb-6">
                 Access your applications with enterprise-grade security
               </p>
             </div>
 
-            <button
-              onClick={handleLogin}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-            >
-              <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                <svg
-                  className="h-5 w-5 text-blue-500 group-hover:text-blue-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            <div className="space-y-4">
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-3 border rounded-lg text-black"
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 border rounded-lg text-black"
+              />
+              {error && <p className="text-red-600 text-sm">{error}</p>}
+              <button
+                type="submit"
+                className="w-full py-3 rounded-lg text-white bg-blue-600 hover:bg-blue-700 cursor-pointer"
+              >
+                Sign in
+              </button>
+              <div className="text-sm text-gray-600 text-center">
+                No account?{" "}
+                <Link
+                  href="/register"
+                  className="text-blue-600 hover:underline"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                  />
-                </svg>
-              </span>
-              Sign in with SSO
-            </button>
+                  Register
+                </Link>
+              </div>
+            </div>
 
             {/* Features */}
             <div className="mt-8 pt-6 border-t border-gray-200">
@@ -175,7 +175,7 @@ export default function LoginPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </form>
         </div>
 
         {/* Footer */}

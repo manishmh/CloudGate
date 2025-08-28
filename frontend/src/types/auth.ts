@@ -25,11 +25,7 @@ export interface TokenResponse {
   scope?: string;
 }
 
-export interface KeycloakConfig {
-  url: string;
-  realm: string;
-  clientId: string;
-}
+// Removed Keycloak config: migrating to custom JWT auth
 
 export interface AuthContextType {
   user: UserSession | null;

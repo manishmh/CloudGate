@@ -32,7 +32,7 @@ func (s *UserService) CreateOrUpdateUser(keycloakID, email, username, firstName,
 	if err == gorm.ErrRecordNotFound {
 		// Create new user
 		user = models.User{
-			KeycloakID: keycloakID,
+			KeycloakID: &keycloakID,
 			Email:      email,
 			Username:   username,
 			FirstName:  firstName,
@@ -75,6 +75,42 @@ func (s *UserService) GetUserByID(userID uuid.UUID) (*models.User, error) {
 	err := s.db.Where("id = ? AND is_active = ?", userID, true).First(&user).Error
 	if err != nil {
 		return nil, err
+	}
+	return &user, nil
+}
+
+// GetUserByEmail retrieves a user by email
+func (s *UserService) GetUserByEmail(email string) (*models.User, error) {
+	var user models.User
+	err := s.db.Where("email = ? AND is_active = ?", email, true).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// GetUserByUsername retrieves a user by username
+func (s *UserService) GetUserByUsername(username string) (*models.User, error) {
+	var user models.User
+	err := s.db.Where("username = ? AND is_active = ?", username, true).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// CreateUserWithPassword creates a local user account with a password hash
+func (s *UserService) CreateUserWithPassword(email, username, firstName, lastName, passwordHash string) (*models.User, error) {
+	user := models.User{
+		Email:        email,
+		Username:     username,
+		FirstName:    firstName,
+		LastName:     lastName,
+		IsActive:     true,
+		PasswordHash: passwordHash,
+	}
+	if err := s.db.Create(&user).Error; err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 	return &user, nil
 }
@@ -247,9 +283,10 @@ func (us *UserService) GetOrCreateDemoUser() (*models.User, error) {
 	}
 
 	// Create demo user if it doesn't exist
+	demoKeycloak := "demo-user-keycloak-id"
 	demoUser := &models.User{
 		ID:         demoUserUUID,
-		KeycloakID: "demo-user-keycloak-id",
+		KeycloakID: &demoKeycloak,
 		Email:      "demo@cloudgate.dev",
 		Username:   "demouser",
 		FirstName:  "Demo",

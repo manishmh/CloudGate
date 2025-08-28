@@ -21,6 +21,7 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 	// Initialize handlers
 	userHandlers := NewUserHandlers(userService, sessionService)
 	settingsHandlers := NewSettingsHandlers(settingsService)
+	dashboardHandlers := NewDashboardHandlers(userService, settingsService)
 	adaptiveAuthHandlers := NewAdaptiveAuthHandlers(adaptiveAuthService)
 	securityMonitoringHandlers := NewSecurityMonitoringHandlers(securityMonitoringService)
 
@@ -37,16 +38,22 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 	router.GET("/health", HealthCheckHandler)
 	router.GET("/health/db", DatabaseHealthCheckHandler)
 
-	// Legal pages
-
-	// Token introspection endpoint
-	router.POST("/token/introspect", TokenIntrospectionHandler(cfg))
-
-	// User info endpoint
-	router.GET("/user/info", UserInfoHandler(cfg))
+	// Auth endpoints (JWT-based)
+	router.POST("/auth/register", RegisterHandler(userService))
+	router.POST("/auth/login", LoginHandler(userService, sessionService, cfg))
+	router.POST("/auth/refresh", RefreshHandler(sessionService, cfg))
+	router.POST("/auth/logout", LogoutHandler(sessionService))
 
 	// API info endpoint
 	router.GET("/api/info", APIInfoHandler)
+
+	// Dashboard endpoints (protected)
+	dashboardGroup := router.Group("/dashboard")
+	dashboardGroup.Use(middleware.AuthenticationMiddleware())
+	{
+		dashboardGroup.GET("/data", dashboardHandlers.GetDashboardData)
+		dashboardGroup.GET("/metrics", dashboardHandlers.GetDashboardMetrics)
+	}
 
 	// User profile endpoints
 	userGroup := router.Group("/user")
@@ -106,14 +113,19 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 		monitoringGroup.DELETE("/devices/:deviceId", RevokeDeviceHandler)
 	}
 
-	// SaaS Applications endpoints
-	router.GET("/apps", GetAppsHandler)
-	router.POST("/apps/connect", ConnectAppHandler)
-	router.POST("/apps/launch", LaunchAppHandler)
-	router.GET("/apps/callback", OAuthCallbackHandler)
+	// SaaS Applications endpoints (protected)
+	appsGroup := router.Group("/apps")
+	appsGroup.Use(middleware.AuthenticationMiddleware())
+	{
+		appsGroup.GET("", GetAppsHandler)
+		appsGroup.POST("/connect", ConnectAppHandler)
+		appsGroup.POST("/launch", LaunchAppHandler)
+		appsGroup.GET("/callback", OAuthCallbackHandler)
+	}
 
-	// OAuth endpoints for real SaaS integrations
+	// OAuth endpoints for real SaaS integrations (protected for user context)
 	oauthGroup := router.Group("/oauth")
+	oauthGroup.Use(middleware.AuthenticationMiddleware())
 	{
 		// Google OAuth (OAuth 2.0)
 		oauthGroup.GET("/google/connect", GoogleOAuthInitHandler)
@@ -138,112 +150,35 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
 		// Salesforce OAuth (OAuth 2.0)
 		oauthGroup.GET("/salesforce/connect", SalesforceOAuthInitHandler)
 		oauthGroup.GET("/salesforce/callback", SalesforceOAuthCallbackHandler)
-
-		// Jira OAuth (OAuth 2.0)
-		oauthGroup.GET("/jira/connect", JiraOAuthInitHandler)
-		oauthGroup.GET("/jira/callback", JiraOAuthCallbackHandler)
-
-		// Notion OAuth (OAuth 2.0)
-		oauthGroup.GET("/notion/connect", NotionOAuthInitHandler)
-		oauthGroup.GET("/notion/callback", NotionOAuthCallbackHandler)
-
-		// Dropbox OAuth (OAuth 2.0)
-		oauthGroup.GET("/dropbox/connect", DropboxOAuthInitHandler)
-		oauthGroup.GET("/dropbox/callback", DropboxOAuthCallbackHandler)
-	}
-
-	// Admin endpoints (for future use)
-	adminGroup := router.Group("/admin")
-	{
-		adminGroup.GET("/stats", AdminStatsHandler)
-		adminGroup.GET("/users", AdminUsersHandler)
-		adminGroup.GET("/sessions", AdminSessionsHandler)
-	}
-
-	// Dashboard routes
-	dashboardHandlers := NewDashboardHandlers(userService, settingsService)
-	dashboardGroup := router.Group("/dashboard")
-	dashboardGroup.Use(middleware.AuthenticationMiddleware())
-	{
-		dashboardGroup.GET("/data", dashboardHandlers.GetDashboardData)
-		dashboardGroup.GET("/metrics", dashboardHandlers.GetDashboardMetrics)
-	}
-
-	// SAML SSO endpoints
-	samlGroup := router.Group("/saml")
-	{
-		samlGroup.GET("/:app_id/init", SAMLInitHandler)
-		samlGroup.POST("/:app_id/acs", SAMLACSHandler)
-		samlGroup.GET("/metadata", SAMLMetadataHandler)
-	}
-
-	// WebAuthn endpoints
-	webauthnGroup := router.Group("/webauthn")
-	webauthnGroup.Use(middleware.AuthenticationMiddleware())
-	{
-		webauthnGroup.POST("/register/begin", WebAuthnRegistrationBeginHandler)
-		webauthnGroup.POST("/register/finish", WebAuthnRegistrationFinishHandler)
-		webauthnGroup.POST("/authenticate/begin", WebAuthnAuthenticationBeginHandler)
-		webauthnGroup.POST("/authenticate/finish", WebAuthnAuthenticationFinishHandler)
-		webauthnGroup.GET("/credentials", GetWebAuthnCredentialsHandler)
-		webauthnGroup.DELETE("/credentials/:credential_id", DeleteWebAuthnCredentialHandler)
-	}
-
-	// Risk assessment endpoints
-	riskGroup := router.Group("/risk")
-	riskGroup.Use(middleware.AuthenticationMiddleware())
-	{
-		riskGroup.POST("/assess", AssessRiskHandler)
-		riskGroup.GET("/policy", GetPolicyDecisionHandler)
-		riskGroup.GET("/history", GetRiskHistoryHandler)
-		riskGroup.PUT("/thresholds", UpdateRiskThresholdsHandler)
 	}
 
 	// Adaptive Authentication endpoints
 	adaptiveAuthGroup := router.Group("/api/v1/adaptive-auth")
 	adaptiveAuthGroup.Use(middleware.AuthenticationMiddleware())
 	{
-		// Core authentication evaluation
 		adaptiveAuthGroup.POST("/evaluate", adaptiveAuthHandlers.EvaluateAuthentication)
-
-		// Risk assessment history
-		adaptiveAuthGroup.GET("/history/:user_id", adaptiveAuthHandlers.GetRiskAssessmentHistory)
-		adaptiveAuthGroup.GET("/latest/:user_id", adaptiveAuthHandlers.GetLatestRiskAssessment)
-
-		// Risk threshold management
+		adaptiveAuthGroup.GET("/history/:userId", adaptiveAuthHandlers.GetRiskAssessmentHistory)
+		adaptiveAuthGroup.GET("/latest/:userId", adaptiveAuthHandlers.GetLatestRiskAssessment)
 		adaptiveAuthGroup.PUT("/thresholds", adaptiveAuthHandlers.UpdateRiskThresholds)
-
-		// Device management
 		adaptiveAuthGroup.POST("/register-device", adaptiveAuthHandlers.RegisterDeviceFingerprint)
 		adaptiveAuthGroup.GET("/device-status", adaptiveAuthHandlers.CheckDeviceStatus)
 	}
 
-	// Security Monitoring & Alerting endpoints
+	// WebAuthn endpoints (protected)
+	webauthnGroup := router.Group("/webauthn")
+	webauthnGroup.Use(middleware.AuthenticationMiddleware())
+	{
+		webauthnGroup.GET("/credentials", GetWebAuthnCredentialsHandler)
+		webauthnGroup.DELETE("/credentials/:credential_id", DeleteWebAuthnCredentialHandler)
+	}
+
+	// Security monitoring endpoints (protected)
 	securityGroup := router.Group("/api/v1/security")
 	securityGroup.Use(middleware.AuthenticationMiddleware())
 	{
-		// Alert management
-		securityGroup.POST("/alerts", securityMonitoringHandlers.GenerateAlert)
+		// Map to implemented handlers
+		securityGroup.POST("/alerts/generate", securityMonitoringHandlers.GenerateAlert)
 		securityGroup.GET("/alerts", securityMonitoringHandlers.GetAlerts)
-		securityGroup.PUT("/alerts/:alert_id/status", securityMonitoringHandlers.UpdateAlertStatus)
-
-		// Incident management
-		securityGroup.POST("/incidents", securityMonitoringHandlers.CreateIncident)
-		securityGroup.GET("/incidents", securityMonitoringHandlers.GetIncidents)
-
-		// Security metrics and monitoring
 		securityGroup.GET("/metrics", securityMonitoringHandlers.GetSecurityMetrics)
-
-		// Event processing
-		securityGroup.POST("/events/login", securityMonitoringHandlers.ProcessLoginEvent)
-		securityGroup.POST("/events/api", securityMonitoringHandlers.ProcessAPIEvent)
-
-		// Alert channel configuration
-		securityGroup.POST("/channels", securityMonitoringHandlers.ConfigureAlertChannel)
-
-		// Reference data
-		securityGroup.GET("/alert-types", securityMonitoringHandlers.GetAlertTypes)
-		securityGroup.GET("/alert-severities", securityMonitoringHandlers.GetAlertSeverities)
 	}
-
 }

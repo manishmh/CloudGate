@@ -1,9 +1,9 @@
 "use client";
 
+import { useAuth } from "@/components/providers/AuthProvider";
 import { DASHBOARD_NAV_ITEMS } from "@/constants";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setSidebarOpen } from "@/store/slices/sidebarSlice";
-import { useKeycloak } from "@react-keycloak/web";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -32,7 +32,7 @@ const iconMap = {
 };
 
 export default function Sidebar() {
-  const { keycloak } = useKeycloak();
+  const { logout } = useAuth();
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const { isOpen: sidebarOpen } = useAppSelector((state) => state.sidebar);
@@ -46,22 +46,14 @@ export default function Sidebar() {
 
   useEffect(() => {
     // Load profile picture
-    if (keycloak?.tokenParsed?.sub) {
-      const savedPicture = localStorage.getItem(
-        `profile_picture_${keycloak.tokenParsed.sub}`
-      );
-      if (savedPicture) {
-        setProfilePicture(savedPicture);
-      }
+    const savedPicture = localStorage.getItem(`profile_picture_demo`);
+    if (savedPicture) {
+      setProfilePicture(savedPicture);
     }
-  }, [keycloak]);
+  }, []);
 
   const handleLogout = () => {
-    if (keycloak) {
-      keycloak.logout({
-        redirectUri: `${window.location.origin}/login`,
-      });
-    }
+    logout();
   };
 
   const handleCloseSidebar = () => {
@@ -69,21 +61,10 @@ export default function Sidebar() {
   };
 
   const getUserDisplayName = () => {
-    if (keycloak?.tokenParsed) {
-      return (
-        keycloak.tokenParsed.preferred_username ||
-        keycloak.tokenParsed.name ||
-        keycloak.tokenParsed.email ||
-        "User"
-      );
-    }
     return "User";
   };
 
   const getUserEmail = () => {
-    if (keycloak?.tokenParsed) {
-      return keycloak.tokenParsed.email || "";
-    }
     return "";
   };
 
@@ -162,11 +143,9 @@ export default function Sidebar() {
             {shouldExpand && (
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  {getUserDisplayName()}
+                  User
                 </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {getUserEmail()}
-                </p>
+                <p className="text-xs text-gray-500 truncate"></p>
               </div>
             )}
           </div>
@@ -200,32 +179,25 @@ export default function Sidebar() {
               </Link>
             );
           })}
-        </nav>
 
-        {/* Bottom Section */}
-        <div className="p-4 border-t border-gray-200 space-y-2">
-          <Link
-            href="/dashboard/profile"
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 cursor-pointer"
-            title={!shouldExpand ? "Profile Settings" : undefined}
-          >
-            <HiUser className="h-5 w-5 text-gray-400 flex-shrink-0" />
-            {shouldExpand && <span>Profile</span>}
-          </Link>
+          {/* Settings Link */}
           <Link
             href="/dashboard/settings"
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 cursor-pointer"
+            className="flex items-center space-x-3 px-2 py-2 rounded-lg text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
             title={!shouldExpand ? "Settings" : undefined}
           >
-            <HiCog className="h-5 w-5 text-gray-400 flex-shrink-0" />
+            <HiCog className="h-5 w-5 text-gray-400" />
             {shouldExpand && <span>Settings</span>}
           </Link>
+        </nav>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-gray-200">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors duration-200 cursor-pointer"
-            title={!shouldExpand ? "Logout" : undefined}
+            className="w-full flex cursor-pointer items-center justify-center space-x-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
           >
-            <HiLogout className="h-5 w-5 flex-shrink-0" />
+            <HiLogout className="h-5 w-5" />
             {shouldExpand && <span>Logout</span>}
           </button>
         </div>

@@ -7,6 +7,7 @@ import {
   QuickActions,
   RecentActivity,
 } from "@/components/dashboard";
+import { useAuth } from "@/components/providers/AuthProvider";
 import {
   DASHBOARD_QUICK_ACTIONS,
   DEFAULT_APP_CONNECTIONS,
@@ -123,6 +124,7 @@ const mapSecurityEventToActivity = (event: any): ActivityItem => {
 };
 
 export default function Dashboard() {
+  const { isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [connections, setConnections] = useState<AppConnection[]>([
@@ -224,11 +226,12 @@ export default function Dashboard() {
     }
   }, []);
 
-  // Initial load - runs only once on mount
+  // Initial load - only after authentication is ready
   useEffect(() => {
+    if (!isAuthenticated) return;
     loadApps();
     loadRecentActivity();
-  }, [loadApps, loadRecentActivity]);
+  }, [isAuthenticated, loadApps, loadRecentActivity]);
 
   // Handle URL params for connection success - runs only once on mount
   useEffect(() => {

@@ -4,42 +4,56 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
 // Config holds the application configuration
 type Config struct {
-	KeycloakURL      string
-	KeycloakRealm    string
-	KeycloakClientID string
-	Port             string
-	AllowedOrigins   []string
+	Port                string
+	AllowedOrigins      []string
+	JWTSecret           string
+	AccessTokenTTLMin   int
+	RefreshTokenTTLHour int
 }
 
 // LoadConfig loads configuration from environment variables
 func LoadConfig() *Config {
 	// Use PORT environment variable for Cloud Run compatibility
-	// Cloud Run sets PORT=8080 by default
-	port := getEnv("PORT", "8080")
+	// Default to 8081
+	port := getEnv("PORT", "8081")
 
 	// Validate required environment variables for production
 	validateRequiredEnvVars()
 
+	// Parse token lifetimes from environment with sensible defaults
+	accessTTL := 15
+	if v := os.Getenv("ACCESS_TOKEN_TTL_MIN"); v != "" {
+		if i, err := strconv.Atoi(v); err == nil {
+			accessTTL = i
+		}
+	}
+	refreshTTL := 24
+	if v := os.Getenv("REFRESH_TOKEN_TTL_HOUR"); v != "" {
+		if i, err := strconv.Atoi(v); err == nil {
+			refreshTTL = i
+		}
+	}
+
 	config := &Config{
-		KeycloakURL:      getEnv("KEYCLOAK_URL", "http://localhost:8080"),
-		KeycloakRealm:    getEnv("KEYCLOAK_REALM", "cloudgate"),
-		KeycloakClientID: getEnv("KEYCLOAK_CLIENT_ID", "cloudgate-frontend"),
-		Port:             port,
-		AllowedOrigins:   strings.Split(getEnv("ALLOWED_ORIGINS", "http://localhost:3000"), ","),
+		Port:                port,
+		AllowedOrigins:      strings.Split(getEnv("ALLOWED_ORIGINS", "http://localhost:3000"), ","),
+		JWTSecret:           getEnv("JWT_SECRET", "dev-secret-change-me"),
+		AccessTokenTTLMin:   accessTTL,
+		RefreshTokenTTLHour: refreshTTL,
 	}
 
 	// Log configuration (excluding sensitive values)
 	log.Printf("🔧 Configuration loaded:")
 	log.Printf("   Port: %s", config.Port)
-	log.Printf("   Keycloak URL: %s", config.KeycloakURL)
-	log.Printf("   Keycloak Realm: %s", config.KeycloakRealm)
-	log.Printf("   Keycloak Client ID: %s", config.KeycloakClientID)
 	log.Printf("   Allowed Origins: %v", config.AllowedOrigins)
+	log.Printf("   JWT Access TTL (min): %d", config.AccessTokenTTLMin)
+	log.Printf("   JWT Refresh TTL (h): %d", config.RefreshTokenTTLHour)
 
 	return config
 }
@@ -51,11 +65,7 @@ func validateRequiredEnvVars() {
 		return // Skip validation for local development
 	}
 
-	required := []string{
-		"KEYCLOAK_URL",
-		"KEYCLOAK_REALM",
-		"KEYCLOAK_CLIENT_ID",
-	}
+	required := []string{"JWT_SECRET"}
 
 	missing := []string{}
 	for _, env := range required {
@@ -89,16 +99,8 @@ func ValidateConfig(cfg *Config) error {
 		return fmt.Errorf("port cannot be empty")
 	}
 
-	if cfg.KeycloakURL == "" {
-		return fmt.Errorf("keycloak URL cannot be empty")
-	}
-
-	if cfg.KeycloakRealm == "" {
-		return fmt.Errorf("keycloak realm cannot be empty")
-	}
-
-	if cfg.KeycloakClientID == "" {
-		return fmt.Errorf("keycloak client ID cannot be empty")
+	if cfg.JWTSecret == "" {
+		return fmt.Errorf("JWT secret cannot be empty")
 	}
 
 	return nil

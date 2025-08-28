@@ -14,7 +14,6 @@ import (
 	"cloudgate-backend/internal/services"
 )
 
-// CloudGate Backend - v1.0.1 - CI/CD Pipeline Test
 func main() {
 	// Load .env file (optional for Cloud Run)
 	if err := godotenv.Load(); err != nil {
@@ -108,9 +107,6 @@ func main() {
 	log.Printf("🚀 ========================================")
 	log.Printf("📅 Timestamp: %s", time.Now().UTC().Format(time.RFC3339))
 	log.Printf("🌐 Port: %s", cfg.Port)
-	log.Printf("🔐 Keycloak URL: %s", cfg.KeycloakURL)
-	log.Printf("🏰 Keycloak Realm: %s", cfg.KeycloakRealm)
-	log.Printf("🔧 Keycloak Client ID: %s", cfg.KeycloakClientID)
 	log.Printf("🌍 Allowed Origins: %v", cfg.AllowedOrigins)
 	log.Printf("📦 SaaS Applications: %d", len(services.GetAllSaaSApps()))
 	log.Printf("💾 Database: Initialized and migrations completed")

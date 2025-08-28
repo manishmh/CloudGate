@@ -1,16 +1,16 @@
 package middleware
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"cloudgate-backend/internal/config"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -32,6 +32,7 @@ func SetupCORS(cfg *config.Config) gin.HandlerFunc {
 	}
 	corsConfig.AllowCredentials = true
 	corsConfig.ExposeHeaders = []string{"*"}
+	corsConfig.AllowWildcard = true
 
 	// Log CORS configuration for debugging
 	log.Printf("🌐 CORS Configuration:")
@@ -59,60 +60,71 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 func AuthenticationMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
+		var tokenString string
+
+		if authHeader != "" {
+			// Extract token from Bearer header
+			tokenParts := strings.Split(authHeader, " ")
+			if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
+				c.Abort()
+				return
+			}
+			tokenString = tokenParts[1]
+		} else {
+			// Fallback to cookie-based token
+			if cookieToken, err := c.Cookie("access_token"); err == nil && cookieToken != "" {
+				tokenString = cookieToken
+			}
+		}
+
+		if tokenString == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 			c.Abort()
 			return
 		}
 
-		// Extract token from Bearer header
-		tokenParts := strings.Split(authHeader, " ")
-		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
+		cfg := config.LoadConfig()
+		parsedToken, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
+			return []byte(cfg.JWTSecret), nil
+		})
+		if err != nil || !parsedToken.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return
 		}
 
-		token := tokenParts[1]
-
-		// For demo purposes, accept demo-user-token and create a valid user context
-		// In production, you would validate the JWT token against Keycloak
-		if token == "demo-user-token" {
-			// Create a demo user UUID for the demo user
-			demoUserUUID, err := uuid.Parse("12345678-1234-1234-1234-123456789012")
-			if err != nil {
-				// Fallback: generate a new UUID
-				demoUserUUID = uuid.New()
-			}
-
-			// Set user context
-			c.Set("userID", demoUserUUID)
-			c.Set("username", "demo-user")
-			c.Set("email", "demo@cloudgate.com")
-			c.Next()
+		claims, ok := parsedToken.Claims.(jwt.MapClaims)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			c.Abort()
 			return
 		}
 
-		// For other tokens (e.g., from Keycloak), create a unique user ID based on token hash
-		// This is a temporary solution until proper JWT validation is implemented
-		hash := sha256.Sum256([]byte(token))
-		hashStr := hex.EncodeToString(hash[:])
+		if expVal, ok := claims["exp"].(float64); ok {
+			if time.Unix(int64(expVal), 0).Before(time.Now()) {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Token expired"})
+				c.Abort()
+				return
+			}
+		}
 
-		// Create a deterministic UUID from the hash (using first 32 chars)
-		// Format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-		userIDStr := hashStr[:8] + "-" + hashStr[8:12] + "-" + hashStr[12:16] + "-" + hashStr[16:20] + "-" + hashStr[20:32]
-		userID, err := uuid.Parse(userIDStr)
-		if err != nil {
-			// Fallback: use the demo user ID
+		var userID uuid.UUID
+		if sub, ok := claims["sub"].(string); ok {
+			if id, err := uuid.Parse(sub); err == nil {
+				userID = id
+			}
+		}
+		if userID == uuid.Nil {
 			userID, _ = uuid.Parse("12345678-1234-1234-1234-123456789012")
 		}
 
-		// Extract username from token if possible (in production, decode JWT)
-		// For now, use a hash-based username
-		username := "user-" + hashStr[:8]
-		email := username + "@cloudgate.com"
+		username, _ := claims["username"].(string)
+		email, _ := claims["email"].(string)
 
-		// Set user context
 		c.Set("userID", userID)
 		c.Set("username", username)
 		c.Set("email", email)

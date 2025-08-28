@@ -1,8 +1,8 @@
 "use client";
 
 import DashboardLayout from "@/components/DashboardLayout";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { PROFILE_CONFIG, PROFILE_FIELDS, PROFILE_MESSAGES } from "@/constants";
-import { useKeycloak } from "@react-keycloak/web";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
@@ -16,7 +16,7 @@ interface UserProfile {
 }
 
 function ProfileContent() {
-  const { keycloak, initialized } = useKeycloak();
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [profile, setProfile] = useState<UserProfile>({
@@ -36,35 +36,29 @@ function ProfileContent() {
   const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (initialized && keycloak?.authenticated && keycloak.tokenParsed) {
-      const userData = keycloak.tokenParsed;
+    if (isAuthenticated) {
+      // Load from local storage placeholders for demo
+      const demoUserId = "12345678-1234-1234-1234-123456789012";
       setProfile({
-        given_name: userData.given_name || "",
-        family_name: userData.family_name || "",
-        email: userData.email || "",
-        preferred_username: userData.preferred_username || "",
+        given_name: localStorage.getItem("given_name") || "Demo",
+        family_name: localStorage.getItem("family_name") || "User",
+        email: localStorage.getItem("email") || "demo@cloudgate.dev",
+        preferred_username: localStorage.getItem("username") || "demouser",
       });
 
-      // Load profile picture from localStorage (in a real app, this would come from backend)
       const savedPicture = localStorage.getItem(
-        `profile_picture_${userData.sub}`
+        `profile_picture_${demoUserId}`
       );
       if (savedPicture) {
         setProfilePicture(savedPicture);
       }
 
-      // Check if email was verified locally
       const localEmailVerified = localStorage.getItem(
-        `email_verified_${userData.sub}`
+        `email_verified_${demoUserId}`
       );
-      if (localEmailVerified === "true") {
-        setEmailVerified(true);
-      } else {
-        setEmailVerified(userData.email_verified || false);
-      }
+      setEmailVerified(localEmailVerified === "true");
     }
 
-    // Check for verification status in URL
     const verification = searchParams.get("verification");
     if (verification) {
       if (verification === "success") {
@@ -72,13 +66,9 @@ function ProfileContent() {
           type: "success",
           text: PROFILE_MESSAGES.EMAIL_VERIFIED_SUCCESS,
         });
-
-        // Mark email as verified locally
-        const userId = keycloak?.tokenParsed?.sub;
-        if (userId) {
-          localStorage.setItem(`email_verified_${userId}`, "true");
-          setEmailVerified(true);
-        }
+        const demoUserId = "12345678-1234-1234-1234-123456789012";
+        localStorage.setItem(`email_verified_${demoUserId}`, "true");
+        setEmailVerified(true);
       } else if (verification === "invalid") {
         setMessage({
           type: "error",
@@ -90,11 +80,9 @@ function ProfileContent() {
           text: PROFILE_MESSAGES.EMAIL_VERIFICATION_ERROR,
         });
       }
-
-      // Clean up URL
       router.replace("/dashboard/profile");
     }
-  }, [initialized, keycloak, searchParams, router]);
+  }, [isAuthenticated, searchParams, router]);
 
   const handleInputChange = (field: string, value: string) => {
     setProfile((prev) => ({
@@ -108,41 +96,29 @@ function ProfileContent() {
       setLoading(true);
       setMessage(null);
 
-      // Validate required fields
       const requiredFields = PROFILE_FIELDS.filter((field) => field.required);
       const missingFields = requiredFields.filter(
         (field) => !profile[field.id as keyof UserProfile]
       );
 
       if (missingFields.length > 0) {
-        setMessage({
-          type: "error",
-          text: PROFILE_MESSAGES.VALIDATION_ERROR,
-        });
+        setMessage({ type: "error", text: PROFILE_MESSAGES.VALIDATION_ERROR });
         return;
       }
 
-      // In a real application, you would send this to your backend
-      // For now, we'll simulate a save operation
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
-      // Save to localStorage (in a real app, this would be saved to backend)
-      const userId = keycloak?.tokenParsed?.sub;
-      if (userId) {
-        localStorage.setItem(`user_profile_${userId}`, JSON.stringify(profile));
-      }
+      const demoUserId = "12345678-1234-1234-1234-123456789012";
+      localStorage.setItem(
+        `user_profile_${demoUserId}`,
+        JSON.stringify(profile)
+      );
 
-      setMessage({
-        type: "success",
-        text: PROFILE_MESSAGES.SAVE_SUCCESS,
-      });
+      setMessage({ type: "success", text: PROFILE_MESSAGES.SAVE_SUCCESS });
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to save profile:", error);
-      setMessage({
-        type: "error",
-        text: PROFILE_MESSAGES.SAVE_ERROR,
-      });
+      setMessage({ type: "error", text: PROFILE_MESSAGES.SAVE_ERROR });
     } finally {
       setLoading(false);
     }
@@ -158,57 +134,33 @@ function ProfileContent() {
       setLoading(true);
       setMessage(null);
 
-      // Validate file size
       if (file.size > PROFILE_CONFIG.MAX_FILE_SIZE) {
-        setMessage({
-          type: "error",
-          text: PROFILE_MESSAGES.FILE_TOO_LARGE,
-        });
+        setMessage({ type: "error", text: PROFILE_MESSAGES.FILE_TOO_LARGE });
         return;
       }
 
-      // Validate file type
       if (
         !(PROFILE_CONFIG.ALLOWED_FILE_TYPES as readonly string[]).includes(
           file.type
         )
       ) {
-        setMessage({
-          type: "error",
-          text: PROFILE_MESSAGES.INVALID_FILE_TYPE,
-        });
+        setMessage({ type: "error", text: PROFILE_MESSAGES.INVALID_FILE_TYPE });
         return;
       }
 
-      // Convert to base64 for storage (in a real app, you'd upload to a server)
       const reader = new FileReader();
       reader.onload = async (e) => {
         const base64 = e.target?.result as string;
-
-        // Simulate upload delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
+        await new Promise((resolve) => setTimeout(resolve, 500));
         setProfilePicture(base64);
-
-        // Save to localStorage (in a real app, this would be saved to backend)
-        const userId = keycloak?.tokenParsed?.sub;
-        if (userId) {
-          localStorage.setItem(`profile_picture_${userId}`, base64);
-        }
-
-        setMessage({
-          type: "success",
-          text: PROFILE_MESSAGES.UPLOAD_SUCCESS,
-        });
+        const demoUserId = "12345678-1234-1234-1234-123456789012";
+        localStorage.setItem(`profile_picture_${demoUserId}`, base64);
+        setMessage({ type: "success", text: PROFILE_MESSAGES.UPLOAD_SUCCESS });
       };
-
       reader.readAsDataURL(file);
     } catch (error) {
       console.error("Failed to upload file:", error);
-      setMessage({
-        type: "error",
-        text: PROFILE_MESSAGES.UPLOAD_ERROR,
-      });
+      setMessage({ type: "error", text: PROFILE_MESSAGES.UPLOAD_ERROR });
     } finally {
       setLoading(false);
     }
@@ -218,20 +170,11 @@ function ProfileContent() {
     try {
       setSendingVerification(true);
       setMessage(null);
-
-      // Simulate sending verification email
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      setMessage({
-        type: "success",
-        text: PROFILE_MESSAGES.VERIFICATION_SENT,
-      });
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      setMessage({ type: "success", text: PROFILE_MESSAGES.VERIFICATION_SENT });
     } catch (error) {
       console.error("Failed to send verification:", error);
-      setMessage({
-        type: "error",
-        text: PROFILE_MESSAGES.VERIFICATION_ERROR,
-      });
+      setMessage({ type: "error", text: PROFILE_MESSAGES.VERIFICATION_ERROR });
     } finally {
       setSendingVerification(false);
     }

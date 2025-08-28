@@ -178,6 +178,23 @@ func runMigrations() error {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
+	// Postgres-specific fixes: allow multiple NULL keycloak_id values
+	if DB.Dialector.Name() == "postgres" {
+		// Drop old unique index if it exists (ensure with raw SQL)
+		_ = DB.Migrator().DropIndex(&models.User{}, "idx_users_keycloak_id")
+		DB.Exec("DROP INDEX IF EXISTS idx_users_keycloak_id")
+
+		// Ensure column allows NULL and has no default ''
+		DB.Exec("ALTER TABLE users ALTER COLUMN keycloak_id DROP NOT NULL")
+		DB.Exec("ALTER TABLE users ALTER COLUMN keycloak_id DROP DEFAULT")
+
+		// Normalize existing data: set empty strings to NULL
+		DB.Exec("UPDATE users SET keycloak_id = NULL WHERE keycloak_id = ''")
+
+		// Create partial unique index for non-NULL keycloak_id
+		DB.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_keycloak_id_not_null ON users (keycloak_id) WHERE keycloak_id IS NOT NULL")
+	}
+
 	log.Println("Database migrations completed successfully")
 	return nil
 }
